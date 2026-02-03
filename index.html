@@ -1,0 +1,534 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Rose Day Quest 🌹</title>
+  <style>
+    :root { --bg1:#0b1020; --bg2:#1b0f1a; --card:#0f1730cc; --text:#f6f6fb; --muted:#c9c9d6; }
+    * { box-sizing: border-box; }
+    body{
+      margin:0; min-height:100vh; display:flex; align-items:center; justify-content:center;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
+      color:var(--text);
+      background: radial-gradient(1200px 800px at 20% 20%, #2a2f55 0%, transparent 60%),
+                  radial-gradient(1000px 700px at 80% 30%, #4b1f3a 0%, transparent 55%),
+                  linear-gradient(160deg, var(--bg1), var(--bg2));
+      padding: 24px;
+    }
+    .wrap{ width:min(860px, 100%); }
+    .card{
+      background: var(--card);
+      border: 1px solid rgba(255,255,255,.12);
+      border-radius: 22px;
+      padding: 22px;
+      box-shadow: 0 18px 60px rgba(0,0,0,.35);
+      backdrop-filter: blur(10px);
+    }
+    h1{ margin:0 0 6px; font-size: clamp(26px, 4vw, 40px); }
+    p{ margin: 8px 0; color: var(--muted); line-height: 1.5; }
+    .row{ display:flex; flex-wrap:wrap; gap:14px; margin-top: 16px; }
+    .panel{ flex: 1 1 280px; padding:16px; border-radius:16px; background: rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.10); }
+    .pill{
+      display:inline-flex; align-items:center; gap:8px;
+      padding: 8px 12px; border-radius: 999px;
+      background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.12);
+      font-size: 14px; color: var(--muted);
+    }
+    input, button{
+      font: inherit;
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,.18);
+      background: rgba(0,0,0,.22);
+      color: var(--text);
+      padding: 12px 12px;
+      width: 100%;
+      outline: none;
+    }
+    input:focus{ border-color: rgba(255,255,255,.35); }
+    button{
+      cursor:pointer;
+      background: linear-gradient(135deg, #ff4d7d, #ff9a5c);
+      border: none;
+      font-weight: 700;
+      letter-spacing: .2px;
+      transition: transform .08s ease;
+    }
+    button:hover{ transform: translateY(-1px); }
+    button:active{ transform: translateY(1px); }
+    .btn-secondary{
+      background: rgba(255,255,255,.10);
+      border: 1px solid rgba(255,255,255,.18);
+      font-weight: 600;
+    }
+    .grid2{ display:grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    @media (max-width:640px){ .grid2{ grid-template-columns:1fr; } }
+
+    .toast{ margin-top: 10px; padding: 10px 12px; border-radius: 12px; display:none; }
+    .ok{ display:block; background: rgba(0,255,160,.12); border:1px solid rgba(0,255,160,.25); color:#bfffe8; }
+    .bad{ display:block; background: rgba(255,70,70,.12); border:1px solid rgba(255,70,70,.25); color:#ffd0d0; }
+
+    /* Rose & confetti */
+    .roseWrap{ display:flex; flex-direction:column; align-items:center; gap: 14px; padding: 10px 0 0; }
+    .rose{
+      width: 140px; height: 140px; border-radius: 28px;
+      background: radial-gradient(circle at 30% 30%, #ffd1dc 0%, #ff4d7d 35%, #b10b3a 70%, #4a061a 100%);
+      position:relative;
+      box-shadow: 0 18px 60px rgba(255,77,125,.25);
+      transform: rotate(8deg);
+    }
+    .rose:before, .rose:after{
+      content:""; position:absolute; inset: 22px;
+      border-radius: 24px;
+      background: radial-gradient(circle at 40% 40%, rgba(255,255,255,.55), rgba(255,255,255,0) 55%);
+      mix-blend-mode: screen;
+    }
+    .stem{
+      width: 12px; height: 140px; background: linear-gradient(#2fff7a, #0b5b2a);
+      border-radius: 12px; margin-top: -6px;
+      position: relative;
+      box-shadow: 0 12px 40px rgba(0,255,120,.15);
+    }
+    .leaf{
+      position:absolute; width: 60px; height: 30px; border-radius: 60px 60px 60px 0;
+      background: linear-gradient(135deg, #37ff86, #0a6d35);
+      top: 58px; left: 6px; transform: rotate(-18deg);
+      opacity:.9;
+    }
+    .leaf.r{ left: -54px; transform: rotate(198deg); top: 86px; }
+    .photo{
+      width: min(560px, 100%);
+      border-radius: 18px;
+      border: 1px solid rgba(255,255,255,.16);
+      overflow:hidden;
+      background: rgba(255,255,255,.06);
+    }
+    .photo img{
+      display:block; width:100%; height:auto;
+    }
+    .small{ font-size: 13px; color: var(--muted); }
+    .footer{
+      margin-top: 14px; display:flex; gap: 10px; flex-wrap:wrap; align-items:center; justify-content:space-between;
+    }
+    .linklike{
+      font-size: 13px; color: #ffd1dc; opacity: .9;
+    }
+
+    canvas#fx{ position:fixed; inset:0; pointer-events:none; }
+  </style>
+</head>
+<body>
+<canvas id="fx"></canvas>
+
+<div class="wrap">
+  <div class="card" id="app">
+    <!-- injected by JS -->
+  </div>
+  <p class="small" style="text-align:center;margin-top:12px;">
+    Tip: open this on her phone — it’s designed to feel like a little story.
+  </p>
+</div>
+
+<script>
+(() => {
+  // ======= Customize these =======
+  const HER_NAME = "My Love";      // e.g. "Ananya"
+  const YOUR_NAME = "Me";          // e.g. "Abhi"
+  const FINAL_NOTE = "Happy Rose Day 🌹 You’re my favorite place to be.";
+  const PHOTO_FILENAME = "us.jpg"; // put your photo in same folder
+
+  // ======= State =======
+  const app = document.getElementById("app");
+  const state = {
+    step: 0,
+    secret: makeSecretPhrase(),
+    lastWord: null,
+    order: shuffle(["sun", "moon", "star"]).slice(0,3),
+    orderIndex: 0
+  };
+
+  function makeSecretPhrase(){
+    // short & sweet; feel free to change
+    const opts = ["forever us", "my favorite", "only you", "rose & us"];
+    return opts[Math.floor(Math.random()*opts.length)];
+  }
+
+  function shuffle(arr){
+    const a = arr.slice();
+    for (let i=a.length-1; i>0; i--){
+      const j = Math.floor(Math.random()*(i+1));
+      [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+  }
+
+  // ======= Views =======
+  function viewIntro(){
+    return `
+      <div class="pill">🌹 Rose Day Quest • made by ${YOUR_NAME}</div>
+      <h1>Hi ${HER_NAME} ✨</h1>
+      <p>
+        I hid a rose at the end of this little quest.
+        Complete 3 tiny challenges, and it’s yours.
+      </p>
+
+      <div class="row">
+        <div class="panel">
+          <h3 style="margin:0 0 8px;">How it works</h3>
+          <p style="margin:0;">
+            Each challenge is easy — but you must do them in order.
+            Ready?
+          </p>
+          <div class="footer">
+            <span class="linklike">No timers. No stress. Just vibes.</span>
+            <button id="startBtn">Start the quest →</button>
+          </div>
+        </div>
+
+        <div class="panel">
+          <h3 style="margin:0 0 8px;">Hint</h3>
+          <p style="margin:0;">
+            If something doesn’t work, try a different answer — I’m testing your *love energy* 😄
+          </p>
+        </div>
+      </div>
+    `;
+  }
+
+  function viewStep1(){
+    // Challenge 1: type secret phrase
+    return `
+      <div class="pill">Challenge 1 of 3 • 🔒 Secret words</div>
+      <h1>Unlock the first gate</h1>
+      <p>
+        Type the secret phrase (all lowercase):<br/>
+        <span style="color:#ffd1dc; font-weight:700;">"${state.secret}"</span>
+      </p>
+
+      <div class="row">
+        <div class="panel">
+          <div class="grid2">
+            <input id="phrase" placeholder='type it here…' autocomplete="off" />
+            <button id="check1">Unlock</button>
+          </div>
+          <div id="msg1" class="toast"></div>
+          <p class="small" style="margin-top:10px;">
+            (Yes, I chose the phrase 😌)
+          </p>
+        </div>
+
+        <div class="panel">
+          <h3 style="margin:0 0 8px;">Tiny note</h3>
+          <p style="margin:0;">
+            If you’re smiling while doing this, I’m already winning.
+          </p>
+        </div>
+      </div>
+
+      <div class="footer">
+        <button class="btn-secondary" id="back0">← Back</button>
+        <span class="small">Progress saves only in this tab.</span>
+      </div>
+    `;
+  }
+
+  function viewStep2(){
+    // Challenge 2: choose correct answer (little memory quiz, customizable)
+    // You should edit q/a here to be personal.
+    const q = "What do you want from me right now?";
+    const options = [
+      "A hug",
+      "A rose",
+      "Snacks",
+      "All of the above"
+    ];
+    const correct = "All of the above";
+
+    return `
+      <div class="pill">Challenge 2 of 3 • 💌 A tiny quiz</div>
+      <h1>Pick the right answer</h1>
+      <p>${q}</p>
+
+      <div class="row">
+        <div class="panel">
+          <div class="grid2">
+            ${options.map(o => `<button class="opt" data-opt="${escapeHtml(o)}">${o}</button>`).join("")}
+          </div>
+          <div id="msg2" class="toast"></div>
+          <p class="small" style="margin-top:10px;">
+            (You can change this question in the code to something personal.)
+          </p>
+        </div>
+
+        <div class="panel">
+          <h3 style="margin:0 0 8px;">Rule</h3>
+          <p style="margin:0;">No overthinking. Your first instinct is usually right.</p>
+        </div>
+      </div>
+
+      <div class="footer">
+        <button class="btn-secondary" id="back1">← Back</button>
+        <span class="small">One more challenge after this.</span>
+      </div>
+    `;
+
+    function bind(){
+      document.querySelectorAll(".opt").forEach(btn => {
+        btn.addEventListener("click", () => {
+          const pick = btn.dataset.opt;
+          const msg = document.getElementById("msg2");
+          if (pick === correct){
+            msg.className = "toast ok";
+            msg.textContent = "Correct 😌 Proceeding…";
+            popConfetti();
+            setTimeout(()=> goto(3), 650);
+          } else {
+            msg.className = "toast bad";
+            msg.textContent = "Hmm… cute answer. Try again 😄";
+          }
+        });
+      });
+    }
+    setTimeout(bind, 0);
+  }
+
+  function viewStep3(){
+    // Challenge 3: tap in a sequence (sun, moon, star)
+    const seq = state.order;
+    return `
+      <div class="pill">Challenge 3 of 3 • ✨ Magic sequence</div>
+      <h1>Cast the spell</h1>
+      <p>
+        Tap these in the right order:
+        <span style="color:#ffd1dc;font-weight:700;">${seq.join(" → ")}</span>
+      </p>
+
+      <div class="row">
+        <div class="panel">
+          <div class="grid2">
+            <button class="tap" data-word="sun">☀️ Sun</button>
+            <button class="tap" data-word="moon">🌙 Moon</button>
+            <button class="tap" data-word="star">⭐ Star</button>
+            <button class="btn-secondary" id="resetSeq">Reset</button>
+          </div>
+          <div id="msg3" class="toast"></div>
+          <p class="small" style="margin-top:10px;">
+            Progress: <span id="prog">${state.orderIndex}/3</span>
+          </p>
+        </div>
+
+        <div class="panel">
+          <h3 style="margin:0 0 8px;">Hint</h3>
+          <p style="margin:0;">If you mess up, just reset. No penalty.</p>
+        </div>
+      </div>
+
+      <div class="footer">
+        <button class="btn-secondary" id="back2">← Back</button>
+        <span class="small">After this… the rose 🌹</span>
+      </div>
+    `;
+  }
+
+  function viewFinal(){
+    return `
+      <div class="pill">Quest complete • 🌹</div>
+      <h1>For you, ${HER_NAME} 💗</h1>
+      <p>${FINAL_NOTE}</p>
+
+      <div class="row">
+        <div class="panel">
+          <div class="roseWrap">
+            <div class="rose" aria-hidden="true"></div>
+            <div class="stem" aria-hidden="true">
+              <div class="leaf"></div>
+              <div class="leaf r"></div>
+            </div>
+            <button id="moreFx">Make it rain confetti ✨</button>
+          </div>
+        </div>
+
+        <div class="panel">
+          <h3 style="margin:0 0 10px;">Us 🫶</h3>
+          <div class="photo">
+            <img src="${PHOTO_FILENAME}" alt="Us" onerror="this.closest('.photo').innerHTML='<div style=&quot;padding:14px;color:#ffd1dc&quot;>Add your photo as <b>${PHOTO_FILENAME}</b> in the same folder as this file ✨</div>';">
+          </div>
+          <p class="small" style="margin-top:10px;">
+            (If the image doesn’t show, check the filename and that it’s uploaded.)
+          </p>
+        </div>
+      </div>
+
+      <div class="footer">
+        <button class="btn-secondary" id="restart">Play again</button>
+        <span class="small">Made with love by ${YOUR_NAME}.</span>
+      </div>
+    `;
+  }
+
+  // ======= Routing =======
+  function render(){
+    if (state.step === 0) app.innerHTML = viewIntro();
+    if (state.step === 1) app.innerHTML = viewStep1();
+    if (state.step === 2) app.innerHTML = viewStep2();
+    if (state.step === 3) app.innerHTML = viewStep3();
+    if (state.step === 4) app.innerHTML = viewFinal();
+    bindCommon();
+  }
+
+  function goto(step){
+    state.step = step;
+    render();
+  }
+
+  // ======= Binds =======
+  function bindCommon(){
+    // Intro
+    const startBtn = document.getElementById("startBtn");
+    if (startBtn) startBtn.onclick = () => goto(1);
+
+    // Back buttons
+    const back0 = document.getElementById("back0");
+    if (back0) back0.onclick = () => goto(0);
+    const back1 = document.getElementById("back1");
+    if (back1) back1.onclick = () => goto(1);
+    const back2 = document.getElementById("back2");
+    if (back2) back2.onclick = () => goto(2);
+
+    // Step 1
+    const check1 = document.getElementById("check1");
+    if (check1){
+      check1.onclick = () => {
+        const inp = document.getElementById("phrase");
+        const msg = document.getElementById("msg1");
+        const val = (inp.value || "").trim().toLowerCase();
+        if (val === state.secret){
+          msg.className = "toast ok";
+          msg.textContent = "Unlocked 💖";
+          popConfetti();
+          setTimeout(()=> goto(2), 650);
+        } else {
+          msg.className = "toast bad";
+          msg.textContent = "Not quite. Try again 😄";
+        }
+      };
+    }
+
+    // Step 3 sequence
+    const reset = document.getElementById("resetSeq");
+    if (reset) reset.onclick = () => resetSeq();
+
+    document.querySelectorAll(".tap").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const word = btn.dataset.word;
+        const need = state.order[state.orderIndex];
+        const msg = document.getElementById("msg3");
+        const prog = document.getElementById("prog");
+
+        if (word === need){
+          state.orderIndex++;
+          prog.textContent = `${state.orderIndex}/3`;
+          msg.className = "toast ok";
+          msg.textContent = "Nice ✨";
+          if (state.orderIndex >= 3){
+            popConfetti();
+            setTimeout(()=> goto(4), 650);
+          }
+        } else {
+          msg.className = "toast bad";
+          msg.textContent = "Oops — that broke the spell 😄 Reset and try again.";
+        }
+      });
+    });
+
+    // Final
+    const restart = document.getElementById("restart");
+    if (restart) restart.onclick = () => {
+      state.step = 0;
+      state.secret = makeSecretPhrase();
+      state.order = shuffle(["sun","moon","star"]).slice(0,3);
+      state.orderIndex = 0;
+      render();
+    };
+
+    const moreFx = document.getElementById("moreFx");
+    if (moreFx) moreFx.onclick = () => popConfetti(180);
+  }
+
+  function resetSeq(){
+    state.orderIndex = 0;
+    const prog = document.getElementById("prog");
+    const msg = document.getElementById("msg3");
+    if (prog) prog.textContent = "0/3";
+    if (msg){ msg.className = "toast"; msg.textContent = ""; }
+  }
+
+  // ======= Confetti (tiny canvas effect) =======
+  const canvas = document.getElementById("fx");
+  const ctx = canvas.getContext("2d");
+  let W,H,particles=[];
+  function resize(){
+    W = canvas.width = window.innerWidth * devicePixelRatio;
+    H = canvas.height = window.innerHeight * devicePixelRatio;
+  }
+  window.addEventListener("resize", resize);
+  resize();
+
+  function popConfetti(n=120){
+    for (let i=0;i<n;i++){
+      particles.push({
+        x: (Math.random()*W),
+        y: -20,
+        vx: (Math.random()*2-1) * 2.0,
+        vy: (Math.random()*2+1) * 2.2,
+        r: (Math.random()*6+3),
+        a: 1,
+        spin: (Math.random()*2-1)*0.18
+      });
+    }
+    if (!animating) requestAnimationFrame(tick);
+    animating = true;
+  }
+
+  let animating = false;
+  function tick(){
+    ctx.clearRect(0,0,W,H);
+    for (const p of particles){
+      p.x += p.vx * devicePixelRatio;
+      p.y += p.vy * devicePixelRatio;
+      p.vy *= 1.01;
+      p.vx += Math.sin(p.y*0.01)*0.02;
+      p.a *= 0.992;
+
+      ctx.save();
+      ctx.globalAlpha = Math.max(0, Math.min(1, p.a));
+      ctx.translate(p.x, p.y);
+      ctx.rotate(p.spin);
+      ctx.fillStyle = "white"; // keep simple; looks nice on dark bg
+      ctx.fillRect(-p.r/2, -p.r/2, p.r, p.r);
+      ctx.restore();
+    }
+    particles = particles.filter(p => p.y < H+40 && p.a > 0.05);
+    if (particles.length){
+      requestAnimationFrame(tick);
+    } else {
+      animating = false;
+    }
+  }
+
+  // ======= Utils =======
+  function escapeHtml(s){
+    return String(s)
+      .replaceAll("&","&amp;")
+      .replaceAll("<","&lt;")
+      .replaceAll(">","&gt;")
+      .replaceAll('"',"&quot;")
+      .replaceAll("'","&#039;");
+  }
+
+  // boot
+  render();
+})();
+</script>
+</body>
+</html>
