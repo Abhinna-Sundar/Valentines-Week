@@ -1,1 +1,798 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Day 1 — Rose Day Quest 🌹</title>
+
+  <!-- Leaflet -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+
+  <style>
+    :root{
+      --bg1:#0b1020; --bg2:#1b0f1a; --card:#0f1730cc; --text:#f6f6fb; --muted:#c9c9d6;
+      --accent1:#ff4d7d; --accent2:#ff9a5c;
+      --ok:#2fff7a; --bad:#ff5c5c;
+    }
+    *{ box-sizing:border-box; }
+    body{
+      margin:0; min-height:100vh; display:flex; align-items:center; justify-content:center;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
+      color:var(--text);
+      background:
+        radial-gradient(1200px 800px at 20% 20%, #2a2f55 0%, transparent 60%),
+        radial-gradient(1000px 700px at 80% 30%, #4b1f3a 0%, transparent 55%),
+        linear-gradient(160deg, var(--bg1), var(--bg2));
+      padding: 18px;
+    }
+    .wrap{ width:min(980px, 100%); }
+    .card{
+      background: var(--card);
+      border: 1px solid rgba(255,255,255,.12);
+      border-radius: 22px;
+      padding: 18px;
+      box-shadow: 0 18px 60px rgba(0,0,0,.35);
+      backdrop-filter: blur(10px);
+    }
+    h1{ margin:0 0 6px; font-size: clamp(24px, 3.6vw, 38px); }
+    p{ margin: 8px 0; color: var(--muted); line-height: 1.55; }
+    .pill{
+      display:inline-flex; align-items:center; gap:8px;
+      padding: 8px 12px; border-radius: 999px;
+      background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.12);
+      font-size: 14px; color: var(--muted);
+      margin-bottom:10px;
+    }
+    .row{ display:flex; flex-wrap:wrap; gap:14px; margin-top: 14px; }
+    .panel{ flex: 1 1 280px; padding:14px; border-radius:16px; background: rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.10); }
+    .btn{
+      cursor:pointer; border-radius: 12px; border: none;
+      background: linear-gradient(135deg, var(--accent1), var(--accent2));
+      color: var(--text); padding: 12px 14px; font-weight: 800; width:100%;
+      transition: transform .08s ease; user-select:none; touch-action: manipulation;
+    }
+    .btn:hover{ transform: translateY(-1px); }
+    .btn:active{ transform: translateY(1px); }
+    .btn-secondary{
+      background: rgba(255,255,255,.10);
+      border: 1px solid rgba(255,255,255,.18);
+      font-weight: 650;
+    }
+    .grid2{ display:grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    @media (max-width:700px){ .grid2{ grid-template-columns: 1fr; } }
+
+    .section{ display:none; }
+    .section.active{ display:block; }
+
+    #mapWrap{ overflow:hidden; border-radius:16px; border:1px solid rgba(255,255,255,.16); }
+    #map{ height: 520px; width: 100%; }
+    @media (max-width:700px){ #map{ height: 480px; } }
+
+    .hud{
+      display:flex; gap:10px; flex-wrap:wrap; align-items:center; justify-content:space-between;
+      margin-top: 10px;
+    }
+    .progress{
+      display:flex; align-items:center; gap:10px;
+      background: rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.12);
+      padding: 8px 12px; border-radius: 999px;
+      font-size: 14px; color: var(--muted);
+    }
+    .bar{
+      width: 180px; height: 8px; border-radius: 999px; overflow:hidden;
+      background: rgba(255,255,255,.10); border:1px solid rgba(255,255,255,.12);
+    }
+    .bar > div{ height:100%; width:0%; background: linear-gradient(135deg, var(--accent1), var(--accent2)); }
+
+    /* Modal */
+    .modalBackdrop{
+      position: fixed; inset:0; background: rgba(0,0,0,.55);
+      display:none; align-items:center; justify-content:center;
+      padding: 18px;
+    }
+    .modalBackdrop.show{ display:flex; }
+    .modal{
+      width: min(760px, 100%);
+      background: rgba(15,23,48,.92);
+      border: 1px solid rgba(255,255,255,.14);
+      border-radius: 18px;
+      padding: 16px;
+      box-shadow: 0 18px 70px rgba(0,0,0,.5);
+      backdrop-filter: blur(10px);
+    }
+    .modal h2{ margin: 0 0 6px; font-size: 20px; }
+    .small{ font-size: 13px; color: var(--muted); }
+    .toast{ margin-top: 10px; padding: 10px 12px; border-radius: 12px; display:none; }
+    .toast.show{ display:block; }
+    .toast.ok{ background: rgba(0,255,160,.12); border:1px solid rgba(0,255,160,.25); color:#bfffe8; }
+    .toast.bad{ background: rgba(255,70,70,.12); border:1px solid rgba(255,70,70,.25); color:#ffd0d0; }
+    input{
+      width: 100%;
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,.18);
+      background: rgba(0,0,0,.22);
+      color: var(--text);
+      padding: 12px 12px;
+      outline: none;
+      font: inherit;
+    }
+
+    /* Scratch */
+    .giftWrap{ display:grid; grid-template-columns: 1fr 1fr; gap: 14px; align-items:start; }
+    @media (max-width:700px){ .giftWrap{ grid-template-columns: 1fr; } }
+    .scratchBox{
+      position: relative;
+      border-radius: 16px;
+      overflow:hidden;
+      border:1px solid rgba(255,255,255,.16);
+      background: rgba(255,255,255,.06);
+      min-height: 320px;
+    }
+    .scratchBox img{ width:100%; height:auto; display:block; }
+    #scratch{
+      position:absolute; inset:0;
+      width:100%; height:100%;
+      touch-action:none;
+    }
+
+    canvas#fx{ position:fixed; inset:0; pointer-events:none; }
+
+    .wordCard{
+      border-radius: 16px;
+      border:1px solid rgba(255,255,255,.12);
+      background: rgba(255,255,255,.06);
+      padding: 14px;
+      margin-top: 12px;
+    }
+    .wordBig{
+      font-size: 34px;
+      font-weight: 900;
+      letter-spacing: .06em;
+      color: #fff;
+      margin: 4px 0 0;
+    }
+  </style>
+</head>
+
+<body>
+<canvas id="fx"></canvas>
+
+<div class="wrap">
+  <div class="card">
+
+    <!-- INTRO -->
+    <section id="intro" class="section active">
+      <div class="pill">Day 1 • Rose Day 🌹 • Finnja (Tiya) & Abhi</div>
+      <h1>Hi Tiya ✨</h1>
+      <p>
+        I hid your rose in three places that belong to us.
+        Follow the hints, tap the right spot on the map, and unlock the next memory.
+      </p>
+
+      <div class="row">
+        <div class="panel">
+          <p class="small"><b>Rules:</b> You must do them in order (1 → 2 → 3). No skipping 😌</p>
+          <button class="btn" id="startBtn">Start the Hunt →</button>
+        </div>
+        <div class="panel">
+          <p><b>Today’s secret mission</b></p>
+          <p class="small">Remember the “Word of the Day”. You’ll need all 8 words at the end.</p>
+          <button class="btn btn-secondary" id="resetAllBtn">Reset Day 1</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- MAP -->
+    <section id="mapSection" class="section">
+      <div class="pill">Act I • 🗺️ Treasure Hunt</div>
+      <h1>Find the three places</h1>
+      <p id="hintLine">Hint 1: the place where we talked all night.</p>
+
+      <div id="mapWrap"><div id="map"></div></div>
+
+      <div class="hud">
+        <div class="progress">
+          <span id="progText">Progress: 0 / 3</span>
+          <div class="bar"><div id="barFill"></div></div>
+        </div>
+        <div style="display:flex; gap:10px; flex-wrap:wrap;">
+          <button class="btn btn-secondary" id="backToIntro">← Back</button>
+          <button class="btn" id="toQuestions" style="display:none;">Continue → Questions</button>
+        </div>
+      </div>
+
+      <p class="small">Tip: Zoom in a bit — the markers appear only when you’re close enough 😉</p>
+    </section>
+
+    <!-- QUESTIONS -->
+    <section id="questions" class="section">
+      <div class="pill">Act II • 💬 3 Questions</div>
+      <h1>Almost there, Tiya 🌹</h1>
+      <p>Answer these exactly (spelling/case doesn’t matter). You’ll get hints.</p>
+
+      <div class="panel">
+        <div id="qa"></div>
+        <div class="toast" id="qToast"></div>
+      </div>
+
+      <div class="hud">
+        <button class="btn btn-secondary" id="backToMap">← Back to map</button>
+        <button class="btn" id="toGift" style="display:none;">Scratch your gift →</button>
+      </div>
+    </section>
+
+    <!-- GIFT -->
+    <section id="gift" class="section">
+      <div class="pill">Finale • 🎁 Scratch Reveal</div>
+      <h1>This rose is yours 🌹</h1>
+      <p>Scratch gently to reveal the photo.</p>
+
+      <div class="giftWrap">
+        <div class="panel">
+          <div class="scratchBox" id="scratchBox">
+            <img id="giftImg" src="us.jpg" alt="Us"
+                 onerror="this.outerHTML='<div style=&quot;padding:14px;color:#ffd1dc&quot;><b>Missing us.jpg</b><br/>Put a photo named <b>us.jpg</b> inside <b>day1/</b> next to <b>index.html</b>.</div>';">
+            <canvas id="scratch"></canvas>
+          </div>
+          <div class="toast" id="scratchMsg"></div>
+          <button class="btn btn-secondary" id="moreFx">More confetti ✨</button>
+        </div>
+
+        <div class="panel">
+          <p><b>Word of the Day</b></p>
+          <p class="small">Keep it safe. Remember it until the final day.</p>
+          <div class="wordCard">
+            <div class="small">Day 1 word:</div>
+            <div class="wordBig" id="wordOfDay">DO</div>
+          </div>
+          <p class="small" style="margin-top:10px;">
+            At the end you will rearrange all 8 words to read:
+            <b>DO YOU WANT TO BE MY VALENTINE, FINNJA?</b>
+          </p>
+          <button class="btn" id="finishBtn">I will remember it ✅</button>
+        </div>
+      </div>
+    </section>
+
+  </div>
+</div>
+
+<!-- Modal -->
+<div class="modalBackdrop" id="modalBackdrop" aria-hidden="true">
+  <div class="modal" role="dialog" aria-modal="true">
+    <div id="modalContent"></div>
+  </div>
+</div>
+
+<script>
+(() => {
+  // ===== Names / Day setup =====
+  const HER_NAME = "Finnja";
+  const HER_NICK = "Tiya";
+  const YOUR_NAME = "Abhi";
+
+  // 8-word sentence split across 8 days (Day 1 word is DO)
+  const DAY_NUMBER = 1;
+  const WORD_OF_DAY = "DO";
+
+  // ===== Persistence =====
+  const KEY = "val_week_day1_rose_v2";
+  const state = loadState();
+
+  // ===== Sections =====
+  const $ = (id) => document.getElementById(id);
+  const intro = $("intro"), mapSection = $("mapSection"), questions = $("questions"), gift = $("gift");
+
+  function show(section){
+    [intro,mapSection,questions,gift].forEach(s => s.classList.remove("active"));
+    section.classList.add("active");
+  }
+
+  $("resetAllBtn").onclick = () => { localStorage.removeItem(KEY); location.reload(); };
+  $("startBtn").onclick = () => { show(mapSection); initMapOnce(); };
+  $("backToIntro").onclick = () => show(intro);
+  $("backToMap").onclick = () => show(mapSection);
+
+  // ===== Locations (with your hints) =====
+  // Betriebshof: Mapcarta rnv Betriebshof Wieblinger Weg (fallback coords)
+  const FALLBACK_BETRIEBSHOF = [49.41157, 8.64875];
+
+  // Im Neuenheimer Feld 720: listed coords for INF 720 / Dreifachhalle
+  const FALLBACK_INF720 = [49.4144140, 8.6729607];
+
+  // Bergheimer Str 88: we will try live geocode; fallback to Bergheim area center
+  const FALLBACK_BERGHEIM_CENTER = [49.4046639, 8.6838306];
+
+  const LOCS = [
+    {
+      id:"betriebshof",
+      label:"Betriebshof",
+      hint:"Hint 1: the place where we talked all night.",
+      coords: FALLBACK_BETRIEBSHOF,
+      addressQuery: "rnv Betriebshof Wieblinger Weg Heidelberg"
+    },
+    {
+      id:"bergheimer88",
+      label:"Bergheimer Str 88",
+      hint:"Hint 2: the place where STITCH was seen for the first time.",
+      coords: FALLBACK_BERGHEIM_CENTER,
+      addressQuery: "Bergheimer Straße 88, 69115 Heidelberg"
+    },
+    {
+      id:"inf720",
+      label:"Im Neuenheimer Feld 720",
+      hint:"Hint 3: the place where we met for the first time.",
+      coords: FALLBACK_INF720,
+      addressQuery: "Im Neuenheimer Feld 720, 69120 Heidelberg"
+    }
+  ];
+
+  // ===== Map =====
+  let mapInitialized = false;
+  let map, markers = {};
+
+  function setHintText(){
+    const step = state.huntStep;
+    $("hintLine").textContent = LOCS[Math.min(step,2)].hint;
+  }
+
+  async function tryGeocode(loc){
+    // Only geocode Bergheimer 88 (most likely to need precision)
+    if (loc.id !== "bergheimer88") return;
+
+    try{
+      // Use Nominatim search (best-effort); if blocked or rate-limited, fallback remains.
+      const url = "https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&q=" + encodeURIComponent(loc.addressQuery);
+      const res = await fetch(url, { headers: { "Accept": "application/json" } });
+      if (!res.ok) return;
+      const data = await res.json();
+      if (!Array.isArray(data) || !data[0]) return;
+      const lat = Number(data[0].lat), lon = Number(data[0].lon);
+      if (!Number.isFinite(lat) || !Number.isFinite(lon)) return;
+      loc.coords = [lat, lon];
+    } catch {
+      // ignore, keep fallback coords
+    }
+  }
+
+  async function initMapOnce(){
+    if (mapInitialized) { updateProgressUI(); return; }
+    mapInitialized = true;
+
+    // Try to refine Bergheimer 88 coordinates
+    await tryGeocode(LOCS[1]);
+
+    map = L.map("map", { zoomControl:true }).setView([49.4097, 8.68], 13);
+
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      maxZoom: 19,
+      attribution: '&copy; OpenStreetMap contributors'
+    }).addTo(map);
+
+    LOCS.forEach((loc, i) => {
+      const m = L.circleMarker(loc.coords, {
+        radius: 10,
+        color: "rgba(255,255,255,.65)",
+        weight: 2,
+        fillColor: "#ff4d7d",
+        fillOpacity: 0.20
+      }).addTo(map);
+
+      m.bindTooltip(`${i+1}. ${loc.label}`, { direction:"top", opacity:0.95 });
+      m.on("click", () => onMarkerClick(loc, i+1));
+      markers[loc.id] = m;
+    });
+
+    // Hide markers unless zoomed in enough (makes it feel more like “searching”)
+    map.on("zoomend", () => {
+      const z = map.getZoom();
+      const show = z >= 14;
+      Object.values(markers).forEach(m => {
+        if (show) m.setStyle({ opacity: 1, fillOpacity: m.options.fillOpacity });
+        else m.setStyle({ opacity: 0.15, fillOpacity: 0.05 });
+      });
+    });
+    map.setZoom(14);
+
+    updateProgressUI();
+    setHintText();
+
+    // Move view near the next objective
+    map.setView(LOCS[Math.min(state.huntStep,2)].coords, 15, { animate:true });
+  }
+
+  function onMarkerClick(loc, stepNumber){
+    const expected = state.huntStep + 1;
+    if (stepNumber !== expected){
+      const next = LOCS[expected-1];
+      openModal(`
+        <h2>Not yet 🙂</h2>
+        <p class="small">${escapeHtml(next.hint)}</p>
+        <div class="grid2" style="margin-top:10px;">
+          <button class="btn btn-secondary" onclick="window.__closeModal()">Okay</button>
+          <button class="btn" onclick="window.__panTo('${next.id}')">Show me</button>
+        </div>
+      `);
+      return;
+    }
+
+    // Unlock with a small confirmation “memory”
+    openModal(`
+      <h2>${stepNumber}. ${escapeHtml(loc.label)}</h2>
+      <p class="small">${escapeHtml(loc.hint)}</p>
+      <div class="toast show ok" style="margin-top:10px;">Unlocked ✨</div>
+      <div class="grid2" style="margin-top:12px;">
+        <button class="btn btn-secondary" onclick="window.__closeModal()">Stay on map</button>
+        <button class="btn" onclick="window.__unlock(${stepNumber})">Continue →</button>
+      </div>
+    `);
+  }
+
+  // ===== Modal helpers =====
+  const backdrop = $("modalBackdrop");
+  const modalContent = $("modalContent");
+  window.__closeModal = () => closeModal();
+  window.__panTo = (id) => {
+    const loc = LOCS.find(x => x.id === id);
+    if (loc && map) map.setView(loc.coords, 16, { animate:true });
+    closeModal();
+  };
+  window.__unlock = (step) => {
+    state.huntStep = step;
+    saveState();
+    popConfetti(140);
+    closeModal();
+    updateProgressUI();
+    setHintText();
+
+    if (state.huntStep >= 3){
+      $("toQuestions").style.display = "inline-block";
+      $("toQuestions").onclick = () => { show(questions); renderQuestions(); };
+    } else {
+      // Pan to next location
+      const next = LOCS[state.huntStep];
+      if (next && map) map.setView(next.coords, 15, { animate:true });
+    }
+  };
+
+  function openModal(html){
+    modalContent.innerHTML = html;
+    backdrop.classList.add("show");
+    backdrop.setAttribute("aria-hidden","false");
+  }
+  function closeModal(){
+    backdrop.classList.remove("show");
+    backdrop.setAttribute("aria-hidden","true");
+    modalContent.innerHTML = "";
+  }
+  backdrop.addEventListener("click", (e) => { if (e.target === backdrop) closeModal(); });
+
+  function updateProgressUI(){
+    const done = state.huntStep;
+    $("progText").textContent = `Progress: ${done} / 3`;
+    $("barFill").style.width = `${(done/3)*100}%`;
+
+    // Marker styling: done = green-ish, next = brighter pink, others dim
+    LOCS.forEach((loc, idx) => {
+      const m = markers[loc.id];
+      if (!m) return;
+      const step = idx+1;
+      const isDone = done >= step;
+      const isNext = done + 1 === step;
+
+      m.setStyle({
+        fillOpacity: isDone ? 0.55 : (isNext ? 0.35 : 0.18),
+        radius: isDone ? 12 : (isNext ? 11 : 9),
+        color: isDone ? "rgba(47,255,122,.75)" : "rgba(255,255,255,.60)",
+        fillColor: isDone ? "#2fff7a" : "#ff4d7d"
+      });
+    });
+
+    if (done >= 3) {
+      $("toQuestions").style.display = "inline-block";
+      $("toQuestions").onclick = () => { show(questions); renderQuestions(); };
+    } else {
+      $("toQuestions").style.display = "none";
+    }
+  }
+
+  // ===== Questions =====
+  function norm(s){ return String(s || "").trim().toLowerCase(); }
+
+  function renderQuestions(){
+    if (state.huntStep < 3) { show(mapSection); return; }
+
+    const qa = $("qa");
+    const toast = $("qToast");
+
+    state.q = state.q || { a:false, b:false, c:false };
+    saveState();
+
+    const questionsList = [
+      {
+        key: "a",
+        text: "a) What was the name of the first chocolate that I gave it to you?",
+        hint: "Hint: it was a pink package.",
+        answer: ["corny"]
+      },
+      {
+        key: "b",
+        text: "b) When we hiked together, what cuisine we had together?",
+        hint: "Hint: close to Germany.",
+        answer: ["italian"]
+      },
+      {
+        key: "c",
+        text: "c) Say it only when you ____ it.",
+        hint: "Fill in the blank.",
+        answer: ["mean"]
+      }
+    ];
+
+    function allDone(){ return state.q.a && state.q.b && state.q.c; }
+
+    qa.innerHTML = questionsList.map(q => {
+      const done = state.q[q.key];
+      return `
+        <div style="margin-bottom:12px; padding:12px; border-radius:14px; border:1px solid rgba(255,255,255,.12); background:rgba(255,255,255,.06);">
+          <div style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
+            <div><b>${escapeHtml(q.text)}</b><div class="small">${escapeHtml(q.hint)}</div></div>
+            <div style="font-weight:900; color:${done ? 'var(--ok)' : 'rgba(255,255,255,.35)'};">${done ? "✓" : "•"}</div>
+          </div>
+          <div class="grid2" style="margin-top:10px;">
+            <input id="in_${q.key}" placeholder="Type your answer…" ${done ? "disabled" : ""}/>
+            <button class="btn ${done ? "btn-secondary" : ""}" id="btn_${q.key}" ${done ? "disabled" : ""}>
+              ${done ? "Locked ✓" : "Submit"}
+            </button>
+          </div>
+        </div>
+      `;
+    }).join("");
+
+    questionsList.forEach(q => {
+      const btn = document.getElementById(`btn_${q.key}`);
+      const input = document.getElementById(`in_${q.key}`);
+      if (!btn || !input) return;
+
+      btn.onclick = () => {
+        const v = norm(input.value);
+        const ok = q.answer.some(a => v === a || v.includes(a));
+        toast.classList.add("show");
+
+        if (ok){
+          state.q[q.key] = true;
+          saveState();
+          toast.className = "toast show ok";
+          toast.textContent = "Correct ✨";
+          popConfetti(110);
+          renderQuestions();
+        } else {
+          toast.className = "toast show bad";
+          toast.textContent = "Not quite 🙂 try again (use the hint).";
+        }
+      };
+    });
+
+    if (allDone()){
+      $("toGift").style.display = "inline-block";
+      $("toGift").onclick = () => { show(gift); initScratchOnce(); };
+    } else {
+      $("toGift").style.display = "none";
+    }
+  }
+
+  // ===== Scratch Card =====
+  let scratchInit = false;
+  function initScratchOnce(){
+    if (scratchInit) return;
+    scratchInit = true;
+
+    const canvas = $("scratch");
+    const box = $("scratchBox");
+    const ctx = canvas.getContext("2d");
+
+    function resize(){
+      const r = box.getBoundingClientRect();
+      canvas.width = Math.floor(r.width * devicePixelRatio);
+      canvas.height = Math.floor(r.height * devicePixelRatio);
+      canvas.style.width = r.width + "px";
+      canvas.style.height = r.height + "px";
+
+      // overlay layer
+      ctx.save();
+      ctx.scale(devicePixelRatio, devicePixelRatio);
+      ctx.globalCompositeOperation = "source-over";
+      ctx.clearRect(0,0,r.width,r.height);
+
+      const g = ctx.createLinearGradient(0,0,r.width,r.height);
+      g.addColorStop(0, "rgba(210,210,220,.95)");
+      g.addColorStop(.5,"rgba(160,160,175,.95)");
+      g.addColorStop(1, "rgba(230,230,240,.95)");
+      ctx.fillStyle = g;
+      ctx.fillRect(0,0,r.width,r.height);
+
+      ctx.fillStyle = "rgba(20,20,35,.55)";
+      ctx.font = "900 18px ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial";
+      ctx.fillText("Scratch to reveal 🥺🌹", 18, 34);
+      ctx.restore();
+    }
+    resize();
+    window.addEventListener("resize", resize);
+
+    let drawing = false;
+
+    function pos(e){
+      const rect = canvas.getBoundingClientRect();
+      const cx = e.touches ? e.touches[0].clientX : e.clientX;
+      const cy = e.touches ? e.touches[0].clientY : e.clientY;
+      return { x: (cx - rect.left), y: (cy - rect.top), w: rect.width, h: rect.height };
+    }
+
+    function scratchAt(x,y){
+      const radius = 22;
+      const scale = devicePixelRatio;
+      ctx.save();
+      ctx.scale(scale, scale);
+      ctx.globalCompositeOperation = "destination-out";
+      ctx.beginPath();
+      ctx.arc(x, y, radius, 0, Math.PI*2);
+      ctx.fill();
+      ctx.restore();
+    }
+
+    function down(e){ e.preventDefault(); drawing = true; const p = pos(e); scratchAt(p.x,p.y); checkPct(); }
+    function move(e){ if(!drawing) return; e.preventDefault(); const p = pos(e); scratchAt(p.x,p.y); checkPct(); }
+    function up(e){ if(!drawing) return; e.preventDefault(); drawing = false; checkPct(true); }
+
+    canvas.addEventListener("mousedown", down);
+    canvas.addEventListener("mousemove", move);
+    window.addEventListener("mouseup", up);
+
+    canvas.addEventListener("touchstart", down, { passive:false });
+    canvas.addEventListener("touchmove", move, { passive:false });
+    window.addEventListener("touchend", up, { passive:false });
+    window.addEventListener("touchcancel", up, { passive:false });
+
+    let pending=false;
+    function checkPct(force=false){
+      if (pending && !force) return;
+      pending=true;
+      setTimeout(() => {
+        pending=false;
+        const pct = estimateCleared(ctx, canvas.width, canvas.height);
+        const msg = $("scratchMsg");
+
+        if (pct >= 0.62){
+          msg.className = "toast show ok";
+          msg.textContent = "There it is… 🌹";
+          popConfetti(220);
+          // soften remaining overlay
+          ctx.save();
+          ctx.globalAlpha = 0.03;
+          ctx.globalCompositeOperation = "destination-out";
+          ctx.fillRect(0,0,canvas.width,canvas.height);
+          ctx.restore();
+        } else {
+          msg.className = "toast";
+          msg.textContent = "";
+        }
+      }, 180);
+    }
+
+    $("moreFx").onclick = () => popConfetti(200);
+
+    // Word of day
+    $("wordOfDay").textContent = WORD_OF_DAY;
+    $("finishBtn").onclick = () => {
+      state.word = WORD_OF_DAY;
+      state.wordDay = DAY_NUMBER;
+      state.wordRemembered = true;
+      saveState();
+      popConfetti(200);
+      alert(`Good girl my Pookie 🥺💗\n\nDay ${DAY_NUMBER} word saved: ${WORD_OF_DAY}\nRemember it till the final day.`);
+    };
+  }
+
+  function estimateCleared(ctx, w, h){
+    const step = 12;
+    const img = ctx.getImageData(0,0,w,h).data;
+    let total = 0, cleared = 0;
+    for (let y=0; y<h; y+=step){
+      for (let x=0; x<w; x+=step){
+        total++;
+        const i = (y*w + x) * 4 + 3; // alpha
+        if (img[i] < 20) cleared++;
+      }
+    }
+    return cleared / total;
+  }
+
+  function escapeHtml(s){
+    return String(s).replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;")
+      .replaceAll('"',"&quot;").replaceAll("'","&#039;");
+  }
+
+  // ===== Confetti =====
+  const fx = document.querySelector("canvas#fx");
+  const fctx = fx.getContext("2d");
+  let FW,FH,particles=[],anim=false;
+
+  function fxResize(){
+    FW = fx.width = window.innerWidth * devicePixelRatio;
+    FH = fx.height = window.innerHeight * devicePixelRatio;
+  }
+  window.addEventListener("resize", fxResize);
+  fxResize();
+
+  function popConfetti(n=120){
+    for (let i=0;i<n;i++){
+      particles.push({
+        x: Math.random()*FW,
+        y: -20,
+        vx: (Math.random()*2-1)*2.0,
+        vy: (Math.random()*2+1)*2.2,
+        r: (Math.random()*6+3),
+        a: 1,
+        spin:(Math.random()*2-1)*0.18
+      });
+    }
+    if (!anim) requestAnimationFrame(tick);
+    anim = true;
+  }
+  function tick(){
+    fctx.clearRect(0,0,FW,FH);
+    for (const p of particles){
+      p.x += p.vx * devicePixelRatio;
+      p.y += p.vy * devicePixelRatio;
+      p.vy *= 1.01;
+      p.a *= 0.992;
+
+      fctx.save();
+      fctx.globalAlpha = Math.max(0, Math.min(1, p.a));
+      fctx.translate(p.x, p.y);
+      fctx.rotate(p.spin);
+      fctx.fillStyle = "white";
+      fctx.fillRect(-p.r/2, -p.r/2, p.r, p.r);
+      fctx.restore();
+    }
+    particles = particles.filter(p => p.y < FH+40 && p.a > 0.05);
+    if (particles.length) requestAnimationFrame(tick);
+    else anim = false;
+  }
+
+  // ===== State =====
+  function loadState(){
+    try{
+      const raw = localStorage.getItem(KEY);
+      if (!raw) return { huntStep: 0, q:null, word:null, wordDay:null, wordRemembered:false };
+      const s = JSON.parse(raw);
+      return {
+        huntStep: Number(s.huntStep||0),
+        q: s.q || null,
+        word: s.word || null,
+        wordDay: Number(s.wordDay||0),
+        wordRemembered: Boolean(s.wordRemembered)
+      };
+    }catch{
+      return { huntStep: 0, q:null, word:null, wordDay:null, wordRemembered:false };
+    }
+  }
+  function saveState(){ localStorage.setItem(KEY, JSON.stringify(state)); }
+
+  // Resume
+  if (state.huntStep >= 3 && state.q && state.q.a && state.q.b && state.q.c){
+    show(gift); initScratchOnce();
+  } else if (state.huntStep >= 3){
+    show(questions); renderQuestions();
+  } else if (state.huntStep > 0){
+    show(mapSection); initMapOnce();
+  } else {
+    show(intro);
+  }
+
+})();
+</script>
+</body>
+</html>
 
