@@ -587,7 +587,8 @@
   function initScratchOnce(){
     if (scratchInit) return;
     scratchInit = true;
-
+    let scratchCompleted = false; // ✅ ADD THIS LINE
+    
     const canvas = $("scratch");
     const box = $("scratchBox");
     const ctx = canvas.getContext("2d");
@@ -664,15 +665,31 @@
         const msg = $("scratchMsg");
 
         if (pct >= 0.62){
-          msg.className = "toast show ok";
-          msg.textContent = "There it is… 🌹";
-          popConfetti(220);
-          // soften remaining overlay
-          ctx.save();
-          ctx.globalAlpha = 0.03;
-          ctx.globalCompositeOperation = "destination-out";
-          ctx.fillRect(0,0,canvas.width,canvas.height);
-          ctx.restore();
+        msg.className = "toast show ok";
+
+          if (!scratchCompleted){
+            scratchCompleted = true;
+
+            msg.textContent = "Photo unlocked ✅ Now click “I’ll remember it” to finish.";
+            popConfetti(220);
+
+            // fully clear overlay so image is visible
+            ctx.save();
+            ctx.globalCompositeOperation = "destination-out";
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.restore();
+
+            // enable the confirmation button
+            const finishBtn = document.getElementById("finishBtn");
+            if (finishBtn){
+              finishBtn.disabled = false;
+              finishBtn.style.opacity = "1";
+              finishBtn.style.cursor = "pointer";
+            }
+
+            // stop further scratching
+            canvas.style.pointerEvents = "none";
+          }
         } else {
           msg.className = "toast";
           msg.textContent = "";
