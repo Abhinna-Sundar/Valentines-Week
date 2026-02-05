@@ -701,13 +701,28 @@
 
     // Word of day
     $("wordOfDay").textContent = WORD_OF_DAY;
+    // Start disabled until photo unlocks
+    $("finishBtn").disabled = true;
+    $("finishBtn").style.opacity = "0.55";
+    $("finishBtn").style.cursor = "not-allowed";
+
     $("finishBtn").onclick = () => {
+    // If photo isn't unlocked yet, do nothing
+    if (!scratchCompleted) return;
+
+      // Save word (optional; you can also skip saving since it restarts)
       state.word = WORD_OF_DAY;
       state.wordDay = DAY_NUMBER;
       state.wordRemembered = true;
       saveState();
+
       popConfetti(200);
-      alert(`Good girl my Pookie 🥺💗\n\nDay ${DAY_NUMBER} word saved: ${WORD_OF_DAY}\nRemember it till the final day.`);
+
+      // Restart AFTER she confirms
+      setTimeout(() => {
+        localStorage.removeItem(KEY);
+        location.reload();
+      }, 1200);
     };
   }
 
