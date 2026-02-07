@@ -423,10 +423,214 @@
   }
 
   // Place 4 clickable objects
-  const table = addClickable("Table", new THREE.BoxGeometry(2,0.18,1), mkMat(0x8b5a2b), new THREE.Vector3(0,0.65,0), DIGITS_TO_FIND[0]);
-  const box   = addClickable("Box",   new THREE.BoxGeometry(0.65,0.65,0.65), mkMat(0xff4d7d), new THREE.Vector3(-2,0.5,-1), DIGITS_TO_FIND[1]);
-  const book  = addClickable("Book",  new THREE.BoxGeometry(1,0.10,0.70), mkMat(0x4da6ff), new THREE.Vector3(2,0.40,-1), DIGITS_TO_FIND[2]);
-  const frame = addClickable("Frame", new THREE.BoxGeometry(0.75,0.75,0.05), mkMat(0xffffff), new THREE.Vector3(0,1.65,-4.9), DIGITS_TO_FIND[3]);
+// ===== “Real” room props (no assets) =====
+
+// A helper to make grouped objects
+  function addGroup(name, pos){
+    const g = new THREE.Group();
+    g.name = name;
+    g.position.copy(pos);
+    scene.add(g);
+    return g;
+  }
+
+  // Table (top + legs). Not clickable itself, just decor.
+  {
+    const g = addGroup("tableGroup", new THREE.Vector3(0, 0, 0));
+
+    const top = new THREE.Mesh(
+      new THREE.BoxGeometry(2.2, 0.14, 1.15),
+      mkMat(0x8b5a2b)
+    );
+    top.position.set(0, 0.75, 0);
+    g.add(top);
+
+    const legMat = mkMat(0x5a3a1e);
+    const legGeo = new THREE.BoxGeometry(0.12, 0.75, 0.12);
+    const legPos = [
+      [-1.00, 0.375, -0.48],
+      [ 1.00, 0.375, -0.48],
+      [-1.00, 0.375,  0.48],
+      [ 1.00, 0.375,  0.48],
+    ];
+    legPos.forEach(([x,y,z]) => {
+      const leg = new THREE.Mesh(legGeo, legMat);
+      leg.position.set(x,y,z);
+      g.add(leg);
+    });
+  }
+
+// Chair (seat + back + legs). Decor.
+  {
+    const g = addGroup("chairGroup", new THREE.Vector3(-1.4, 0, 1.2));
+
+    const seat = new THREE.Mesh(
+      new THREE.BoxGeometry(0.7, 0.10, 0.7),
+      mkMat(0x3b3b46)
+    );
+    seat.position.set(0, 0.45, 0);
+    g.add(seat);
+
+    const back = new THREE.Mesh(
+      new THREE.BoxGeometry(0.7, 0.8, 0.10),
+      mkMat(0x2c2c36)
+    );
+    back.position.set(0, 0.85, -0.30);
+    g.add(back);
+
+    const legMat = mkMat(0x1e1e26);
+    const legGeo = new THREE.BoxGeometry(0.08, 0.45, 0.08);
+    const legPos = [
+      [-0.28, 0.225, -0.28],
+      [ 0.28, 0.225, -0.28],
+      [-0.28, 0.225,  0.28],
+      [ 0.28, 0.225,  0.28],
+    ];
+    legPos.forEach(([x,y,z]) => {
+      const leg = new THREE.Mesh(legGeo, legMat);
+      leg.position.set(x,y,z);
+      g.add(leg);
+    });
+
+    g.rotation.y = 0.45;
+  }
+
+// Plant (pot + leaves). Decor.
+  {
+    const g = addGroup("plantGroup", new THREE.Vector3(2.2, 0, 1.6));
+
+    const pot = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.22, 0.28, 0.35, 18),
+      mkMat(0x7a4b2a)
+    );
+    pot.position.set(0, 0.18, 0);
+    g.add(pot);
+
+    const stem = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.03, 0.04, 0.45, 12),
+      mkMat(0x2c7a4b)
+    );
+    stem.position.set(0, 0.55, 0);
+    g.add(stem);
+
+    const leafMat = mkMat(0x2fff7a);
+    leafMat.roughness = 0.8;
+    for (let i=0;i<6;i++){
+      const leaf = new THREE.Mesh(
+        new THREE.SphereGeometry(0.14, 14, 14),
+        leafMat
+      );
+      const a = i * (Math.PI*2/6);
+      leaf.position.set(Math.cos(a)*0.18, 0.75 + Math.random()*0.12, Math.sin(a)*0.18);
+      g.add(leaf);
+    }
+  }
+
+// Lamp (stand + shade) + extra warm point light. Decor.
+  let lampLight;
+  {
+    const g = addGroup("lampGroup", new THREE.Vector3(0.8, 0, -1.6));
+  
+    const base = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.18, 0.22, 0.08, 16),
+      mkMat(0x4a4a56)
+    );
+    base.position.set(0, 0.04, 0);
+    g.add(base);
+
+    const pole = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.04, 0.04, 1.1, 16),
+      mkMat(0x6c6c7a)
+    );
+    pole.position.set(0, 0.60, 0);
+    g.add(pole);
+
+    const shade = new THREE.Mesh(
+      new THREE.ConeGeometry(0.28, 0.40, 20),
+      mkMat(0xffe7d1)
+    );
+    shade.position.set(0, 1.25, 0);
+    shade.rotation.x = Math.PI;
+    g.add(shade);
+
+    // actual light
+    lampLight = new THREE.PointLight(0xffd3a8, 0.0, 12);
+    lampLight.position.set(0.8, 1.25, -1.6);
+    scene.add(lampLight);
+  }
+
+  // Cabinet with a drawer that opens (CLICKABLE HANDLE reveals a digit)
+  const cabinet = new THREE.Group();
+  cabinet.position.set(-2.4, 0, -1.6);
+  scene.add(cabinet);
+
+  {
+    const body = new THREE.Mesh(
+      new THREE.BoxGeometry(1.2, 1.0, 0.6),
+      mkMat(0x2f344f)
+    );
+    body.position.set(0, 0.5, 0);
+    cabinet.add(body);
+
+    // Drawer box (slides out)
+    const drawer = new THREE.Mesh(
+      new THREE.BoxGeometry(1.05, 0.28, 0.55),
+      mkMat(0x3b4163)
+    );
+    drawer.position.set(0, 0.55, 0.02);
+    drawer.userData = { isDrawer:true, open:false, anim:0 }; // anim 0..1
+    cabinet.add(drawer);
+
+  // Handle is the clickable part (small cylinder)
+    const handle = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.03, 0.03, 0.28, 12),
+      mkMat(0xdcdcff)
+    );
+    handle.rotation.z = Math.PI/2;
+    handle.position.set(0, 0.55, 0.32);
+    handle.userData = { clickable:true, kind:"drawerHandle", digit: DIGITS_TO_FIND[1], found:false };
+    cabinet.add(handle);
+
+  // add to clickable list + idle list for slight pulse until found
+    objects.push(handle);
+    idle.push(handle);
+
+  // Keep references for animation tick
+    scene.userData.drawer = drawer;
+    scene.userData.drawerHandle = handle;
+  }
+
+// Now the remaining 3 clickable objects are: box, book, frame.
+// We'll place them on/near the table & wall:
+
+// Box (clickable digit)
+  const box = addClickable(
+    "Box",
+    new THREE.BoxGeometry(0.65,0.65,0.65),
+    mkMat(0xff4d7d),
+    new THREE.Vector3(-0.6, 1.08, 0.2),
+    DIGITS_TO_FIND[0]
+  );
+
+// Book (clickable digit)
+  const book = addClickable(
+    "Book",
+    new THREE.BoxGeometry(1,0.10,0.70),
+    mkMat(0x4da6ff),
+    new THREE.Vector3(0.8, 1.02, -0.1),
+    DIGITS_TO_FIND[2]
+  );
+
+// Frame (clickable digit) on the wall
+  const frame = addClickable(
+    "Frame",
+    new THREE.BoxGeometry(0.75,0.75,0.05),
+    mkMat(0xffffff),
+    new THREE.Vector3(0, 1.65, -4.9),
+    DIGITS_TO_FIND[3]
+  );
+  frame.rotation.y = 0.02;
+
 
   // Give a tiny rotation to wall frame so it “faces in”
   frame.rotation.y = 0.02;
@@ -479,41 +683,78 @@
     pointer.y = -(clientY / window.innerHeight) * 2 + 1;
   }
 
-  function onPick(e){
-    setPointerFromEvent(e);
-    raycaster.setFromCamera(pointer, camera);
-    const hit = raycaster.intersectObjects(objects);
-    if (!hit.length) return;
+function onPick(e){
+  setPointerFromEvent(e);
+  raycaster.setFromCamera(pointer, camera);
+  const hit = raycaster.intersectObjects(objects);
+  if (!hit.length) return;
 
-    const obj = hit[0].object;
+  const obj = hit[0].object;
 
-    if (obj.userData.found){
-      showToast("bad", "Already checked 😌");
+  // ===== DRAWER SPECIAL CASE (PASTE THIS BLOCK HERE) =====
+  if (obj.userData && obj.userData.kind === "drawerHandle"){
+    const drawer = scene.userData.drawer;
+    const handle = scene.userData.drawerHandle;
+
+    if (!drawer || !handle) return;
+
+    // If already found digit, just toggle drawer
+    if (handle.userData.found){
+      drawer.userData.open = !drawer.userData.open;
+      drawer.userData.animTarget = drawer.userData.open ? 1 : 0;
       return;
     }
 
-    // mark found
-    obj.userData.found = true;
+    // First time: open drawer + reveal digit
+    drawer.userData.open = true;
+    drawer.userData.animTarget = 1;
 
-    // glow + scale “pop”
-    obj.material.emissive.setHex(0x1aff88);
-    obj.userData.pop = 1.0;
+    handle.userData.found = true;
+    handle.material.emissive.setHex(0x1aff88);
+    handle.userData.pop = 1.0;
 
-    // reveal digit sprite
-    popDigitAt(obj.userData.digit, obj.getWorldPosition(new THREE.Vector3()));
+    popDigitAt(
+      String(handle.userData.digit),
+      handle.getWorldPosition(new THREE.Vector3())
+    );
 
-    // add digit to state
-    state.foundDigits.push(String(obj.userData.digit));
+    state.foundDigits.push(String(handle.userData.digit));
     saveState();
     updateDigitsUI();
-
     showToast("ok", `Found a digit ✅ (${state.foundDigits.length}/4)`);
 
-    // When all found → open passcode overlay
     if (state.foundDigits.length >= 4){
       setTimeout(openUnlock, 700);
     }
+    return; // ⬅️ VERY IMPORTANT
   }
+  // ===== END DRAWER SPECIAL CASE =====
+
+  // Normal click handling for box/book/frame
+  if (obj.userData.found){
+    showToast("bad", "Already checked 😌");
+    return;
+  }
+
+  obj.userData.found = true;
+  obj.material.emissive.setHex(0x1aff88);
+  obj.userData.pop = 1.0;
+
+  popDigitAt(
+    String(obj.userData.digit),
+    obj.getWorldPosition(new THREE.Vector3())
+  );
+
+  state.foundDigits.push(String(obj.userData.digit));
+  saveState();
+  updateDigitsUI();
+  showToast("ok", `Found a digit ✅ (${state.foundDigits.length}/4)`);
+
+  if (state.foundDigits.length >= 4){
+    setTimeout(openUnlock, 700);
+  }
+}
+
 
   window.addEventListener("click", onPick);
   window.addEventListener("touchstart", (e) => { onPick(e); }, { passive:true });
