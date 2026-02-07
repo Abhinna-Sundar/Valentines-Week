@@ -1,165 +1,666 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
+  <meta charset="utf-8" />
   <title>Day 2 — Propose Day 💍</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <style>
-    body { margin:0; overflow:hidden; background:#0b1020; }
-    #ui {
-      position:fixed; top:12px; left:12px;
-      background:rgba(0,0,0,.55);
-      color:#fff; padding:12px 14px;
-      border-radius:14px;
-      font-family:system-ui;
+    :root{
+      --bg:#0b1020; --fg:#fff; --muted:rgba(255,255,255,.78);
+      --card:rgba(0,0,0,.55);
+      --accent1:#ff4d7d; --accent2:#ff9a5c; --ok:#2fff7a; --bad:#ff5c5c;
+    }
+    body{ margin:0; overflow:hidden; background:var(--bg); font-family:system-ui; }
+    #ui{
+      position:fixed; top:12px; left:12px; z-index:10;
+      background:var(--card); color:var(--fg);
+      padding:12px 14px; border-radius:14px;
+      border:1px solid rgba(255,255,255,.14);
+      backdrop-filter: blur(10px);
+      width:min(360px, calc(100vw - 24px));
+    }
+    #ui b{ color:var(--fg); }
+    .line{ display:flex; gap:10px; flex-wrap:wrap; align-items:center; justify-content:space-between; }
+    .pill{
+      display:inline-flex; align-items:center; gap:8px;
+      padding:6px 10px; border-radius:999px;
+      border:1px solid rgba(255,255,255,.14);
+      background:rgba(255,255,255,.07);
+      color:var(--muted); font-size:13px;
+    }
+    #digits{
+      font-weight:900; letter-spacing:.24em; font-size:18px;
+      padding:6px 10px; border-radius:12px;
+      border:1px solid rgba(255,255,255,.14);
+      background:rgba(255,255,255,.06);
+    }
+    #toast{
+      margin-top:10px; padding:10px 12px; border-radius:12px;
+      border:1px solid rgba(255,255,255,.14);
+      background:rgba(255,255,255,.06);
+      color:var(--muted);
+      display:none;
+    }
+    #toast.ok{ display:block; border-color: rgba(47,255,122,.3); background: rgba(47,255,122,.10); color:#c9ffe4; }
+    #toast.bad{ display:block; border-color: rgba(255,92,92,.3); background: rgba(255,92,92,.10); color:#ffd0d0; }
+    #hint{
+      position:fixed; bottom:12px; left:50%; transform:translateX(-50%);
       z-index:10;
+      background:var(--card); color:var(--fg);
+      padding:10px 14px; border-radius:14px;
+      border:1px solid rgba(255,255,255,.14);
+      backdrop-filter: blur(10px);
+      max-width: min(700px, calc(100vw - 24px));
+      text-align:center;
+      color:var(--muted);
     }
-    #code {
-      font-weight:900; letter-spacing:.2em;
+
+    /* Unlock overlay */
+    #overlay{
+      position:fixed; inset:0; z-index:20;
+      display:none; place-items:center;
+      background: rgba(0,0,0,.62);
+      padding: 18px;
     }
-    .hint {
-      position:fixed; bottom:12px; left:50%;
-      transform:translateX(-50%);
-      background:rgba(0,0,0,.55);
-      color:#fff; padding:10px 14px;
+    #overlay.show{ display:grid; }
+    .modal{
+      width:min(520px, 100%);
+      background: rgba(15,23,48,.92);
+      border:1px solid rgba(255,255,255,.14);
+      border-radius:18px;
+      padding:16px;
+      box-shadow:0 18px 70px rgba(0,0,0,.55);
+      backdrop-filter: blur(10px);
+      color: var(--fg);
+    }
+    .modal h2{ margin:0 0 6px; font-size:18px; }
+    .modal p{ margin:8px 0; color: var(--muted); line-height:1.5; }
+    .pinBoxes{ display:flex; gap:10px; justify-content:center; margin-top: 10px; }
+    .pinBox{
+      width: 44px; height: 54px;
+      border-radius: 14px;
+      border:1px solid rgba(255,255,255,.16);
+      background: rgba(255,255,255,.06);
+      display:grid; place-items:center;
+      font-size: 26px;
+      font-weight: 900;
+    }
+    .keypad{
+      display:grid; grid-template-columns: repeat(3,1fr);
+      gap:10px; margin-top:12px;
+    }
+    .key{
+      padding:14px 0;
       border-radius:14px;
-      font-family:system-ui;
+      border:1px solid rgba(255,255,255,.16);
+      background: rgba(255,255,255,.08);
+      color: rgba(255,255,255,.92);
+      font-weight: 900; user-select:none;
+      text-align:center; cursor:pointer;
+    }
+    .row2{ display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:10px; }
+    .btn{
+      padding:12px 14px;
+      border-radius:14px;
+      border:none;
+      background: linear-gradient(135deg, var(--accent1), var(--accent2));
+      color:#fff;
+      font-weight:900;
+      cursor:pointer;
+      user-select:none;
+    }
+    .btn.secondary{
+      background: rgba(255,255,255,.10);
+      border:1px solid rgba(255,255,255,.18);
+      font-weight:800;
+    }
+    .shake{ animation: shake .32s ease; }
+    @keyframes shake{
+      0%{ transform: translateX(0); }
+      25%{ transform: translateX(-6px); }
+      50%{ transform: translateX(6px); }
+      75%{ transform: translateX(-4px); }
+      100%{ transform: translateX(0); }
+    }
+
+    /* Photo reveal */
+    #photoWrap{
+      display:none;
+      margin-top:12px;
+      border-radius:16px;
+      overflow:hidden;
+      border:1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.06);
+    }
+    #photoWrap.show{ display:block; }
+    #photoWrap img{ width:100%; height:auto; display:block; }
+
+    .wordCard{
+      margin-top:12px;
+      border-radius:16px;
+      border:1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.06);
+      padding:12px;
+    }
+    .wordBig{
+      font-size:34px;
+      font-weight:1000;
+      letter-spacing:.08em;
+      margin-top:6px;
     }
   </style>
 </head>
 
 <body>
 <div id="ui">
-  Digits found: <span id="code">_ _ _ _</span>
+  <div class="line">
+    <span class="pill">Day 2 • Propose Day 💍</span>
+    <span class="pill">Find 4 digits</span>
+  </div>
+
+  <div class="line" style="margin-top:8px;">
+    <div>
+      <div style="font-size:13px; color:var(--muted);">Digits found (scrambled):</div>
+      <div id="digits">_ _ _ _</div>
+    </div>
+    <div style="text-align:right; font-size:13px; color:var(--muted);">
+      Drag/zoom to look around<br/>
+      Tap objects to search
+    </div>
+  </div>
+
+  <div id="toast"></div>
 </div>
-<div class="hint">Click objects to find hidden numbers</div>
+
+<div id="hint">Find the hidden digits. Then unlock the photo with the passcode.</div>
+
+<div id="overlay">
+  <div class="modal" id="modal">
+    <h2 id="modalTitle">Unlock</h2>
+    <p id="modalText">Enter the 4-digit passcode using the digits you found.</p>
+
+    <div class="pinBoxes" id="pinBoxes">
+      <div class="pinBox" id="p0"> </div>
+      <div class="pinBox" id="p1"> </div>
+      <div class="pinBox" id="p2"> </div>
+      <div class="pinBox" id="p3"> </div>
+    </div>
+
+    <div class="keypad" id="keypad"></div>
+
+    <div class="row2">
+      <button class="btn secondary" id="clearBtn">Clear</button>
+      <button class="btn" id="submitBtn">Unlock</button>
+    </div>
+
+    <div id="photoWrap">
+      <img src="us.jpg" alt="Us" onerror="this.outerHTML='<div style=&quot;padding:12px;color:#ffd0d0&quot;><b>Missing us.jpg</b><br/>Put a photo named <b>us.jpg</b> inside <b>day2/</b>.</div>';">
+    </div>
+
+    <div class="wordCard" id="wordCard" style="display:none;">
+      <div style="color:var(--muted); font-size:13px;">Word of the Day</div>
+      <div class="wordBig" id="word">YOU</div>
+      <p style="margin:8px 0 0; color:var(--muted); font-size:13px;">Please remember this word carefully.</p>
+      <button class="btn" id="rememberBtn" style="margin-top:10px;">I’ll remember it ✅</button>
+    </div>
+  </div>
+</div>
 
 <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/examples/js/controls/OrbitControls.js"></script>
 
 <script>
-/* ===== BASIC SETUP ===== */
-const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x0b1020);
+(() => {
+  // ===== Day 2 configuration =====
+  const KEY = "val_week_day2_propose_v1";
 
-const camera = new THREE.PerspectiveCamera(
-  60, window.innerWidth/window.innerHeight, 0.1, 100
-);
-camera.position.set(0, 2, 6);
+  // The digits she must collect (they’ll be shown scrambled in UI)
+  const DIGITS_TO_FIND = ["2","0","2","5"];   // you can change this anytime
 
-const renderer = new THREE.WebGLRenderer({ antialias:true });
-renderer.setSize(window.innerWidth, window.innerHeight);
-document.body.appendChild(renderer.domElement);
+  // The actual passcode she must type (unscramble)
+  const PASSCODE = "2025";                    // change if you want
 
-const controls = new THREE.OrbitControls(camera, renderer.domElement);
-controls.enablePan = false;
-controls.maxPolarAngle = Math.PI / 2.1;
+  // Word of the day (only show the word; no spoiler sentence)
+  const WORD_OF_DAY = "YOU";
 
-/* ===== LIGHTING ===== */
-scene.add(new THREE.AmbientLight(0xffffff, 0.4));
-const light = new THREE.PointLight(0xffb3c7, 1);
-light.position.set(2,4,2);
-scene.add(light);
+  // ===== State =====
+  const state = loadState();
 
-/* ===== ROOM ===== */
-const room = new THREE.Mesh(
-  new THREE.BoxGeometry(10,5,10),
-  new THREE.MeshStandardMaterial({ color:0x1a1f3a, side:THREE.BackSide })
-);
-scene.add(room);
+  const digitsEl = document.getElementById("digits");
+  const toastEl = document.getElementById("toast");
+  const overlay = document.getElementById("overlay");
+  const modal = document.getElementById("modal");
+  const modalTitle = document.getElementById("modalTitle");
+  const modalText = document.getElementById("modalText");
+  const keypad = document.getElementById("keypad");
+  const clearBtn = document.getElementById("clearBtn");
+  const submitBtn = document.getElementById("submitBtn");
+  const photoWrap = document.getElementById("photoWrap");
+  const wordCard = document.getElementById("wordCard");
+  const wordEl = document.getElementById("word");
+  const rememberBtn = document.getElementById("rememberBtn");
 
-/* ===== OBJECTS ===== */
-const objects = [];
-const digits = [];
+  wordEl.textContent = WORD_OF_DAY;
 
-/* helper */
-function addObject(geo, mat, pos, digit){
-  const m = new THREE.Mesh(geo, mat);
-  m.position.copy(pos);
-  m.userData.digit = digit;
-  scene.add(m);
-  objects.push(m);
-}
+  function showToast(type, text){
+    toastEl.className = "";
+    toastEl.style.display = "block";
+    toastEl.textContent = text;
+    toastEl.classList.add(type);
+    if (!text) toastEl.style.display = "none";
+  }
 
-/* Table */
-addObject(
-  new THREE.BoxGeometry(2,0.2,1),
-  new THREE.MeshStandardMaterial({ color:0x8b5a2b }),
-  new THREE.Vector3(0,0.6,0),
-  "2"
-);
+  // Show scrambled digits (so she has to rearrange mentally)
+  function updateDigitsUI(){
+    const found = state.foundDigits.slice();
+    const display = scramble(found);
+    const slots = [];
+    for (let i=0;i<4;i++){
+      slots.push(display[i] ?? "_");
+    }
+    digitsEl.textContent = slots.join(" ");
+  }
 
-/* Box */
-addObject(
-  new THREE.BoxGeometry(0.6,0.6,0.6),
-  new THREE.MeshStandardMaterial({ color:0xff4d7d }),
-  new THREE.Vector3(-2,0.5,-1),
-  "0"
-);
+  function scramble(arr){
+    const a = arr.slice();
+    for (let i=a.length-1;i>0;i--){
+      const j = Math.floor(Math.random()*(i+1));
+      [a[i],a[j]] = [a[j],a[i]];
+    }
+    return a;
+  }
 
-/* Book */
-addObject(
-  new THREE.BoxGeometry(1,0.1,0.7),
-  new THREE.MeshStandardMaterial({ color:0x4da6ff }),
-  new THREE.Vector3(2,0.4,-1),
-  "2"
-);
+  updateDigitsUI();
 
-/* Frame */
-addObject(
-  new THREE.BoxGeometry(0.7,0.7,0.05),
-  new THREE.MeshStandardMaterial({ color:0xffffff }),
-  new THREE.Vector3(0,1.6,-4.9),
-  "5"
-);
-
-/* ===== CLICK DETECTION ===== */
-const raycaster = new THREE.Raycaster();
-const mouse = new THREE.Vector2();
-
-window.addEventListener("click", e => {
-  mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
-  mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
-  raycaster.setFromCamera(mouse, camera);
-
-  const hit = raycaster.intersectObjects(objects);
-  if (hit.length){
-    const obj = hit[0].object;
-    if (!digits.includes(obj.userData.digit)){
-      digits.push(obj.userData.digit);
-      obj.material.color.set(0x2fff7a);
-      updateCode();
-      if (digits.length === 4) unlock();
+  // ===== Build keypad =====
+  let entered = "";
+  function setPinBoxes(){
+    for (let i=0;i<4;i++){
+      document.getElementById("p"+i).textContent = entered[i] ? "•" : "";
     }
   }
-});
+  function openUnlock(){
+    overlay.classList.add("show");
+    modalTitle.textContent = "Unlock the gift";
+    modalText.textContent = "Enter the 4-digit passcode. (Use the digits you found.)";
+    buildKeypad();
+    entered = "";
+    setPinBoxes();
+    showToast("", "");
+  }
+  function buildKeypad(){
+    keypad.innerHTML = "";
+    const keys = ["1","2","3","4","5","6","7","8","9","⌫","0","OK"];
+    keys.forEach(k => {
+      const div = document.createElement("div");
+      div.className = "key";
+      div.textContent = k;
+      div.onclick = () => {
+        if (k === "⌫"){
+          entered = entered.slice(0,-1);
+          setPinBoxes();
+          return;
+        }
+        if (k === "OK"){
+          tryUnlock();
+          return;
+        }
+        if (entered.length >= 4) return;
+        entered += k;
+        setPinBoxes();
+        if (entered.length === 4) {
+          // small auto-submit feel on mobile
+          // (but still let OK/Unlock button work)
+        }
+      };
+      keypad.appendChild(div);
+    });
+  }
+  clearBtn.onclick = () => { entered = ""; setPinBoxes(); };
+  submitBtn.onclick = () => tryUnlock();
 
-/* ===== UI ===== */
-function updateCode(){
-  document.getElementById("code").textContent =
-    digits.join(" ") + " _".repeat(4-digits.length);
-}
+  function tryUnlock(){
+    if (entered.length !== 4){
+      modal.classList.remove("shake"); void modal.offsetWidth; modal.classList.add("shake");
+      showToast("bad", "Enter 4 digits 🙂");
+      return;
+    }
+    if (entered === PASSCODE){
+      showToast("ok", "Unlocked 😌");
+      photoWrap.classList.add("show");
+      wordCard.style.display = "block";
+      // lock keypad after success
+      keypad.querySelectorAll(".key").forEach(k => k.style.pointerEvents="none");
+      submitBtn.disabled = true; submitBtn.style.opacity = "0.6";
+      clearBtn.disabled = true; clearBtn.style.opacity = "0.6";
+      popConfetti(220);
+    } else {
+      modal.classList.remove("shake"); void modal.offsetWidth; modal.classList.add("shake");
+      showToast("bad", "Not quite. Try rearranging the digits you found.");
+      entered = "";
+      setPinBoxes();
+    }
+  }
 
-function unlock(){
-  setTimeout(() => {
-    window.location.href = "photo.html";
-  }, 800);
-}
+  rememberBtn.onclick = () => {
+    // Save the word (optional)
+    state.word = WORD_OF_DAY;
+    state.remembered = true;
+    saveState();
 
-/* ===== RENDER LOOP ===== */
-function animate(){
-  requestAnimationFrame(animate);
-  renderer.render(scene, camera);
-}
-animate();
+    popConfetti(160);
 
-/* ===== RESIZE ===== */
-window.addEventListener("resize", () => {
-  camera.aspect = window.innerWidth/window.innerHeight;
-  camera.updateProjectionMatrix();
+    // Restart Day 2 cleanly
+    setTimeout(() => {
+      localStorage.removeItem(KEY);
+      location.reload();
+    }, 900);
+  };
+
+  // ===== THREE.JS SCENE =====
+  const scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x0b1020);
+
+  const camera = new THREE.PerspectiveCamera(60, window.innerWidth/window.innerHeight, 0.1, 100);
+  camera.position.set(0, 2.2, 6.2);
+
+  const renderer = new THREE.WebGLRenderer({ antialias:true });
   renderer.setSize(window.innerWidth, window.innerHeight);
-});
+  renderer.setPixelRatio(Math.min(2, window.devicePixelRatio || 1));
+  document.body.appendChild(renderer.domElement);
+
+  const controls = new THREE.OrbitControls(camera, renderer.domElement);
+  controls.enablePan = false;
+  controls.maxPolarAngle = Math.PI / 2.05;
+  controls.minDistance = 3.0;
+  controls.maxDistance = 10.0;
+
+  // Lights with “fade-in”
+  const ambient = new THREE.AmbientLight(0xffffff, 0.05);
+  scene.add(ambient);
+
+  const warm = new THREE.PointLight(0xffb3c7, 0.0, 40);
+  warm.position.set(2,4,2);
+  scene.add(warm);
+
+  const cool = new THREE.PointLight(0x7aa7ff, 0.0, 40);
+  cool.position.set(-2,3,-2);
+  scene.add(cool);
+
+  // Room (box)
+  const room = new THREE.Mesh(
+    new THREE.BoxGeometry(10,5,10),
+    new THREE.MeshStandardMaterial({ color:0x1a1f3a, side:THREE.BackSide, roughness:0.95 })
+  );
+  scene.add(room);
+
+  // Floor accent
+  const floor = new THREE.Mesh(
+    new THREE.PlaneGeometry(10,10),
+    new THREE.MeshStandardMaterial({ color:0x121a33, roughness:0.95, metalness:0.0 })
+  );
+  floor.rotation.x = -Math.PI/2;
+  floor.position.y = -0.01;
+  scene.add(floor);
+
+  // Objects (clickable) + subtle idle animation
+  const objects = [];
+  const idle = [];
+
+  function mkMat(color){
+    return new THREE.MeshStandardMaterial({ color, roughness:0.55, metalness:0.15, emissive:0x000000 });
+  }
+
+  function addClickable(name, geo, mat, pos, digit){
+    const m = new THREE.Mesh(geo, mat);
+    m.position.copy(pos);
+    m.userData = { name, digit, found:false, baseY:pos.y, t:Math.random()*10 };
+    scene.add(m);
+    objects.push(m);
+    idle.push(m);
+    return m;
+  }
+
+  // Place 4 clickable objects
+  const table = addClickable("Table", new THREE.BoxGeometry(2,0.18,1), mkMat(0x8b5a2b), new THREE.Vector3(0,0.65,0), DIGITS_TO_FIND[0]);
+  const box   = addClickable("Box",   new THREE.BoxGeometry(0.65,0.65,0.65), mkMat(0xff4d7d), new THREE.Vector3(-2,0.5,-1), DIGITS_TO_FIND[1]);
+  const book  = addClickable("Book",  new THREE.BoxGeometry(1,0.10,0.70), mkMat(0x4da6ff), new THREE.Vector3(2,0.40,-1), DIGITS_TO_FIND[2]);
+  const frame = addClickable("Frame", new THREE.BoxGeometry(0.75,0.75,0.05), mkMat(0xffffff), new THREE.Vector3(0,1.65,-4.9), DIGITS_TO_FIND[3]);
+
+  // Give a tiny rotation to wall frame so it “faces in”
+  frame.rotation.y = 0.02;
+
+  // Floating digit sprites (simple canvas textures)
+  const floatDigits = [];
+  function makeDigitSprite(text){
+    const c = document.createElement("canvas");
+    c.width = 256; c.height = 256;
+    const ctx = c.getContext("2d");
+    ctx.clearRect(0,0,256,256);
+    ctx.beginPath();
+    ctx.arc(128,128,92,0,Math.PI*2);
+    ctx.fillStyle = "rgba(0,0,0,.45)";
+    ctx.fill();
+    ctx.lineWidth = 8;
+    ctx.strokeStyle = "rgba(255,255,255,.25)";
+    ctx.stroke();
+
+    ctx.fillStyle = "white";
+    ctx.font = "900 120px system-ui";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText(text, 128, 132);
+
+    const tex = new THREE.CanvasTexture(c);
+    tex.needsUpdate = true;
+    const mat = new THREE.SpriteMaterial({ map: tex, transparent:true });
+    const spr = new THREE.Sprite(mat);
+    spr.scale.set(0.8,0.8,0.8);
+    return spr;
+  }
+
+  function popDigitAt(digit, worldPos){
+    const spr = makeDigitSprite(digit);
+    spr.position.copy(worldPos.clone().add(new THREE.Vector3(0, 0.8, 0)));
+    spr.userData = { life: 0, vy: 0.6 };
+    scene.add(spr);
+    floatDigits.push(spr);
+  }
+
+  // Click detection (mouse + touch)
+  const raycaster = new THREE.Raycaster();
+  const pointer = new THREE.Vector2();
+
+  function setPointerFromEvent(e){
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+    pointer.x = (clientX / window.innerWidth) * 2 - 1;
+    pointer.y = -(clientY / window.innerHeight) * 2 + 1;
+  }
+
+  function onPick(e){
+    setPointerFromEvent(e);
+    raycaster.setFromCamera(pointer, camera);
+    const hit = raycaster.intersectObjects(objects);
+    if (!hit.length) return;
+
+    const obj = hit[0].object;
+
+    if (obj.userData.found){
+      showToast("bad", "Already checked 😌");
+      return;
+    }
+
+    // mark found
+    obj.userData.found = true;
+
+    // glow + scale “pop”
+    obj.material.emissive.setHex(0x1aff88);
+    obj.userData.pop = 1.0;
+
+    // reveal digit sprite
+    popDigitAt(obj.userData.digit, obj.getWorldPosition(new THREE.Vector3()));
+
+    // add digit to state
+    state.foundDigits.push(String(obj.userData.digit));
+    saveState();
+    updateDigitsUI();
+
+    showToast("ok", `Found a digit ✅ (${state.foundDigits.length}/4)`);
+
+    // When all found → open passcode overlay
+    if (state.foundDigits.length >= 4){
+      setTimeout(openUnlock, 700);
+    }
+  }
+
+  window.addEventListener("click", onPick);
+  window.addEventListener("touchstart", (e) => { onPick(e); }, { passive:true });
+
+  // ===== Animate scene =====
+  let t0 = performance.now();
+  function animate(now){
+    const dt = Math.min(0.05, (now - t0) / 1000);
+    t0 = now;
+
+    // Light fade-in over ~2 seconds
+    const fade = Math.min(1, now / 2000);
+    ambient.intensity = 0.25 * fade;
+    warm.intensity = 1.00 * fade;
+    cool.intensity = 0.55 * fade;
+
+    // Idle float for unfound objects + subtle pulse
+    for (const m of idle){
+      m.userData.t += dt;
+      if (!m.userData.found){
+        m.position.y = m.userData.baseY + Math.sin(m.userData.t * 1.4) * 0.02;
+        const pulse = 0.02 + (Math.sin(m.userData.t * 2.2) * 0.01);
+        m.material.emissive.setRGB(pulse, 0.0, pulse);
+      } else {
+        // pop animation
+        if (m.userData.pop && m.userData.pop > 0){
+          m.userData.pop = Math.max(0, m.userData.pop - dt*2.4);
+          const s = 1 + m.userData.pop*0.18;
+          m.scale.set(s,s,s);
+          if (m.userData.pop === 0) m.scale.set(1,1,1);
+        }
+      }
+    }
+
+    // Floating digits drift upward and fade out
+    for (let i=floatDigits.length-1; i>=0; i--){
+      const spr = floatDigits[i];
+      spr.userData.life += dt;
+      spr.position.y += spr.userData.vy * dt;
+      spr.material.opacity = Math.max(0, 1 - spr.userData.life / 2.2);
+      if (spr.userData.life > 2.2){
+        scene.remove(spr);
+        floatDigits.splice(i,1);
+      }
+    }
+
+    renderer.render(scene, camera);
+    requestAnimationFrame(animate);
+  }
+  requestAnimationFrame(animate);
+
+  // ===== Restore found objects on reload =====
+  // If she refreshes after finding digits, keep it consistent.
+  function applyFoundState(){
+    const foundCount = state.foundDigits.length;
+    const objsInOrder = [table, box, book, frame];
+    for (let i=0; i<Math.min(4, foundCount); i++){
+      const o = objsInOrder[i];
+      o.userData.found = true;
+      o.material.emissive.setHex(0x1aff88);
+    }
+    if (foundCount >= 4){
+      setTimeout(openUnlock, 400);
+    }
+  }
+  applyFoundState();
+
+  // ===== Resize =====
+  window.addEventListener("resize", () => {
+    camera.aspect = window.innerWidth/window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(Math.min(2, window.devicePixelRatio || 1));
+  });
+
+  // ===== Confetti (simple UI confetti) =====
+  const fx = document.createElement("canvas");
+  fx.style.position="fixed"; fx.style.inset="0"; fx.style.pointerEvents="none"; fx.style.zIndex="30";
+  document.body.appendChild(fx);
+  const fctx = fx.getContext("2d");
+  let FW,FH,parts=[],animFx=false;
+
+  function fxResize(){
+    FW = fx.width = window.innerWidth * (window.devicePixelRatio||1);
+    FH = fx.height = window.innerHeight * (window.devicePixelRatio||1);
+  }
+  window.addEventListener("resize", fxResize);
+  fxResize();
+
+  function popConfetti(n=120){
+    const dpr = (window.devicePixelRatio||1);
+    for (let i=0;i<n;i++){
+      parts.push({
+        x: Math.random()*FW,
+        y: -20*dpr,
+        vx: (Math.random()*2-1)*2.2*dpr,
+        vy: (Math.random()*2+1)*2.6*dpr,
+        r: (Math.random()*6+3)*dpr,
+        a: 1,
+        spin:(Math.random()*2-1)*0.18
+      });
+    }
+    if (!animFx) requestAnimationFrame(tickFx);
+    animFx = true;
+  }
+
+  function tickFx(){
+    fctx.clearRect(0,0,FW,FH);
+    for (const p of parts){
+      p.x += p.vx;
+      p.y += p.vy;
+      p.vy *= 1.01;
+      p.a *= 0.992;
+
+      fctx.save();
+      fctx.globalAlpha = Math.max(0, Math.min(1, p.a));
+      fctx.translate(p.x, p.y);
+      fctx.rotate(p.spin);
+      fctx.fillStyle = "white";
+      fctx.fillRect(-p.r/2, -p.r/2, p.r, p.r);
+      fctx.restore();
+    }
+    parts = parts.filter(p => p.y < FH+40 && p.a > 0.05);
+    if (parts.length) requestAnimationFrame(tickFx);
+    else animFx = false;
+  }
+
+  // ===== Storage =====
+  function loadState(){
+    try{
+      const raw = localStorage.getItem(KEY);
+      if (!raw) return { foundDigits: [], word:null, remembered:false };
+      const s = JSON.parse(raw);
+      return {
+        foundDigits: Array.isArray(s.foundDigits) ? s.foundDigits.slice(0,4) : [],
+        word: s.word || null,
+        remembered: !!s.remembered
+      };
+    }catch{
+      return { foundDigits: [], word:null, remembered:false };
+    }
+  }
+  function saveState(){
+    localStorage.setItem(KEY, JSON.stringify(state));
+  }
+
+})();
 </script>
 </body>
 </html>
