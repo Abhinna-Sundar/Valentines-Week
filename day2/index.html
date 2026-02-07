@@ -1,119 +1,197 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
   <title>Day 2 — Propose Day 💍</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-
   <style>
     :root{
-      --bg:#0b1020; --fg:#fff; --muted:rgba(255,255,255,.78);
-      --card:rgba(0,0,0,.55);
-      --accent1:#ff4d7d; --accent2:#ff9a5c; --ok:#2fff7a; --bad:#ff5c5c;
+      --bg1:#0b1020; --bg2:#1b0f1a;
+      --card:rgba(15,23,48,.86);
+      --stroke:rgba(255,255,255,.14);
+      --text:#f6f6fb; --muted:rgba(255,255,255,.75);
+      --accent1:#ff4d7d; --accent2:#ff9a5c;
+      --ok:#2fff7a; --bad:#ff5c5c;
     }
-    body{ margin:0; overflow:hidden; background:var(--bg); font-family:system-ui; }
-    #ui{
-      position:fixed; top:12px; left:12px; z-index:10;
-      background:var(--card); color:var(--fg);
-      padding:12px 14px; border-radius:14px;
-      border:1px solid rgba(255,255,255,.14);
+    *{ box-sizing:border-box; }
+    body{
+      margin:0; min-height:100vh;
+      font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;
+      color:var(--text);
+      background:
+        radial-gradient(1200px 800px at 20% 20%, #2a2f55 0%, transparent 60%),
+        radial-gradient(1000px 700px at 80% 30%, #4b1f3a 0%, transparent 55%),
+        linear-gradient(160deg, var(--bg1), var(--bg2));
+      display:flex; align-items:center; justify-content:center;
+      padding:18px;
+    }
+    .wrap{ width:min(980px, 100%); }
+    .card{
+      background:var(--card);
+      border:1px solid var(--stroke);
+      border-radius:22px;
+      padding:16px;
+      box-shadow:0 18px 60px rgba(0,0,0,.35);
       backdrop-filter: blur(10px);
-      width:min(360px, calc(100vw - 24px));
     }
-    #ui b{ color:var(--fg); }
-    .line{ display:flex; gap:10px; flex-wrap:wrap; align-items:center; justify-content:space-between; }
+    h1{ margin:0 0 6px; font-size: clamp(22px, 3.4vw, 36px); }
+    h2{ margin:0 0 6px; font-size: 18px; }
+    p{ margin:8px 0; color:var(--muted); line-height:1.55; }
+    .topbar{
+      display:flex; flex-wrap:wrap; gap:10px;
+      align-items:center; justify-content:space-between;
+      margin-bottom:12px;
+    }
     .pill{
       display:inline-flex; align-items:center; gap:8px;
-      padding:6px 10px; border-radius:999px;
-      border:1px solid rgba(255,255,255,.14);
-      background:rgba(255,255,255,.07);
-      color:var(--muted); font-size:13px;
-    }
-    #digits{
-      font-weight:900; letter-spacing:.24em; font-size:18px;
-      padding:6px 10px; border-radius:12px;
-      border:1px solid rgba(255,255,255,.14);
-      background:rgba(255,255,255,.06);
-    }
-    #toast{
-      margin-top:10px; padding:10px 12px; border-radius:12px;
-      border:1px solid rgba(255,255,255,.14);
-      background:rgba(255,255,255,.06);
+      padding:8px 12px;
+      border-radius:999px;
+      background:rgba(255,255,255,.08);
+      border:1px solid var(--stroke);
       color:var(--muted);
+      font-size:14px;
+    }
+    .digits{
+      display:flex; gap:8px; align-items:center;
+    }
+    .digitBox{
+      width:36px; height:42px;
+      border-radius:12px;
+      border:1px solid rgba(255,255,255,.16);
+      background:rgba(0,0,0,.18);
+      display:grid; place-items:center;
+      font-weight:900;
+      color:rgba(255,255,255,.25);
+    }
+    .digitBox.on{ color:rgba(255,255,255,.95); }
+    .grid2{ display:grid; grid-template-columns: 1fr 1fr; gap:14px; }
+    @media(max-width:840px){ .grid2{ grid-template-columns:1fr; } }
+
+    .panel{
+      padding:14px;
+      border-radius:18px;
+      border:1px solid var(--stroke);
+      background:rgba(255,255,255,.06);
+    }
+    .btn{
+      cursor:pointer;
+      border:none;
+      border-radius:14px;
+      padding:12px 14px;
+      width:100%;
+      font-weight:900;
+      color:var(--text);
+      background:linear-gradient(135deg, var(--accent1), var(--accent2));
+      user-select:none;
+      transition: transform .08s ease;
+    }
+    .btn:hover{ transform: translateY(-1px); }
+    .btn:active{ transform: translateY(1px); }
+    .btn.secondary{
+      background:rgba(255,255,255,.10);
+      border:1px solid rgba(255,255,255,.18);
+      font-weight:800;
+    }
+    .row{ display:flex; gap:10px; flex-wrap:wrap; }
+    input[type="text"]{
+      width:100%;
+      padding:12px 12px;
+      border-radius:14px;
+      border:1px solid rgba(255,255,255,.16);
+      background:rgba(0,0,0,.22);
+      color:var(--text);
+      outline:none;
+      font-size:16px;
+    }
+    .small{ font-size:13px; color:var(--muted); }
+
+    .toast{
+      margin-top:10px;
+      padding:10px 12px;
+      border-radius:14px;
+      border:1px solid var(--stroke);
+      background:rgba(255,255,255,.06);
       display:none;
     }
-    #toast.ok{ display:block; border-color: rgba(47,255,122,.3); background: rgba(47,255,122,.10); color:#c9ffe4; }
-    #toast.bad{ display:block; border-color: rgba(255,92,92,.3); background: rgba(255,92,92,.10); color:#ffd0d0; }
-    #hint{
-      position:fixed; bottom:12px; left:50%; transform:translateX(-50%);
-      z-index:10;
-      background:var(--card); color:var(--fg);
-      padding:10px 14px; border-radius:14px;
-      border:1px solid rgba(255,255,255,.14);
-      backdrop-filter: blur(10px);
-      max-width: min(700px, calc(100vw - 24px));
-      text-align:center;
-      color:var(--muted);
-    }
+    .toast.ok{ display:block; border-color: rgba(47,255,122,.3); background:rgba(47,255,122,.10); color:#c9ffe4; }
+    .toast.bad{ display:block; border-color: rgba(255,92,92,.3); background:rgba(255,92,92,.10); color:#ffd0d0; }
 
-    /* Unlock overlay */
-    #overlay{
-      position:fixed; inset:0; z-index:20;
+    .section{ display:none; }
+    .section.active{ display:block; }
+
+    /* Flag cards */
+    .flagGrid{
+      display:grid; grid-template-columns: repeat(3, 1fr);
+      gap:10px;
+    }
+    @media(max-width:840px){ .flagGrid{ grid-template-columns:1fr; } }
+    .flagCard{
+      border-radius:16px;
+      border:1px solid rgba(255,255,255,.14);
+      background:rgba(0,0,0,.18);
+      overflow:hidden;
+      cursor:pointer;
+      user-select:none;
+      transition: transform .08s ease;
+    }
+    .flagCard:hover{ transform: translateY(-1px); }
+    .flagCard img{ width:100%; height:120px; object-fit:cover; display:block; }
+    .flagCard .cap{ padding:10px 12px; color:var(--muted); font-size:14px; }
+
+    /* Map */
+    .mapWrap{
+      border-radius:18px;
+      border:1px solid rgba(255,255,255,.14);
+      background:rgba(0,0,0,.18);
+      overflow:hidden;
+    }
+    svg{ width:100%; height:auto; display:block; }
+
+    /* Overlays */
+    .overlay{
+      position:fixed; inset:0;
       display:none; place-items:center;
       background: rgba(0,0,0,.62);
-      padding: 18px;
+      padding:18px;
+      z-index:40;
     }
-    #overlay.show{ display:grid; }
+    .overlay.show{ display:grid; }
     .modal{
-      width:min(520px, 100%);
+      width:min(560px, 100%);
       background: rgba(15,23,48,.92);
       border:1px solid rgba(255,255,255,.14);
       border-radius:18px;
       padding:16px;
       box-shadow:0 18px 70px rgba(0,0,0,.55);
-      backdrop-filter: blur(10px);
-      color: var(--fg);
     }
-    .modal h2{ margin:0 0 6px; font-size:18px; }
-    .modal p{ margin:8px 0; color: var(--muted); line-height:1.5; }
-    .pinBoxes{ display:flex; gap:10px; justify-content:center; margin-top: 10px; }
+    .bigDigit{
+      font-size:58px;
+      font-weight:1000;
+      letter-spacing:.08em;
+      text-align:center;
+      margin: 8px 0 6px;
+    }
+    .center{ text-align:center; }
+    .pinBoxes{ display:flex; gap:10px; justify-content:center; margin-top:10px; flex-wrap:wrap; }
     .pinBox{
       width: 44px; height: 54px;
       border-radius: 14px;
       border:1px solid rgba(255,255,255,.16);
       background: rgba(255,255,255,.06);
       display:grid; place-items:center;
-      font-size: 26px;
-      font-weight: 900;
+      font-size: 26px; font-weight: 900;
     }
-    .keypad{
-      display:grid; grid-template-columns: repeat(3,1fr);
-      gap:10px; margin-top:12px;
-    }
+    .keypad{ display:grid; grid-template-columns: repeat(3, 1fr); gap:10px; margin-top:12px; }
     .key{
       padding:14px 0;
       border-radius:14px;
       border:1px solid rgba(255,255,255,.16);
       background: rgba(255,255,255,.08);
       color: rgba(255,255,255,.92);
-      font-weight: 900; user-select:none;
-      text-align:center; cursor:pointer;
-    }
-    .row2{ display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:10px; }
-    .btn{
-      padding:12px 14px;
-      border-radius:14px;
-      border:none;
-      background: linear-gradient(135deg, var(--accent1), var(--accent2));
-      color:#fff;
-      font-weight:900;
+      font-weight: 900;
       cursor:pointer;
       user-select:none;
-    }
-    .btn.secondary{
-      background: rgba(255,255,255,.10);
-      border:1px solid rgba(255,255,255,.18);
-      font-weight:800;
+      text-align:center;
     }
     .shake{ animation: shake .32s ease; }
     @keyframes shake{
@@ -123,8 +201,6 @@
       75%{ transform: translateX(-4px); }
       100%{ transform: translateX(0); }
     }
-
-    /* Photo reveal */
     #photoWrap{
       display:none;
       margin-top:12px;
@@ -135,7 +211,6 @@
     }
     #photoWrap.show{ display:block; }
     #photoWrap img{ width:100%; height:auto; display:block; }
-
     .wordCard{
       margin-top:12px;
       border-radius:16px;
@@ -143,154 +218,629 @@
       background: rgba(255,255,255,.06);
       padding:12px;
     }
-    .wordBig{
-      font-size:34px;
-      font-weight:1000;
-      letter-spacing:.08em;
-      margin-top:6px;
-    }
+    .wordBig{ font-size:34px; font-weight:1000; letter-spacing:.08em; margin-top:6px; }
   </style>
 </head>
-
 <body>
-<div id="ui">
-  <div class="line">
-    <span class="pill">Day 2 • Propose Day 💍</span>
-    <span class="pill">Find 4 digits</span>
-  </div>
-
-  <div class="line" style="margin-top:8px;">
-    <div>
-      <div style="font-size:13px; color:var(--muted);">Digits found (scrambled):</div>
-      <div id="digits">_ _ _ _</div>
+<div class="wrap">
+  <div class="card">
+    <div class="topbar">
+      <div class="pill">Day 2 • Propose Day 💍</div>
+      <div class="pill">Finish 6 mini-games → get digits → enter the magic number</div>
+      <div class="digits" aria-label="digits progress">
+        <div class="digitBox" id="d0">•</div>
+        <div class="digitBox" id="d1">•</div>
+        <div class="digitBox" id="d2">•</div>
+        <div class="digitBox" id="d3">•</div>
+        <div class="digitBox" id="d4">•</div>
+        <div class="digitBox" id="d5">•</div>
+      </div>
     </div>
-    <div style="text-align:right; font-size:13px; color:var(--muted);">
-      Drag/zoom to look around<br/>
-      Tap objects to search
-    </div>
-  </div>
 
-  <div id="toast"></div>
+    <h1>Country Quest 🌍</h1>
+    <p>Each mini-game gives you <b>one digit</b>. At the end, enter the <b>magic number</b> to unlock the gift.</p>
+
+    <!-- SECTION 1 -->
+    <div class="section active" id="s1">
+      <div class="grid2">
+        <div class="panel">
+          <h2>(i) Unscramble 3 countries</h2>
+          <p class="small">Type the correct country name (case doesn’t matter). Use hints if you want.</p>
+          <div id="scrambleArea"></div>
+          <div class="row" style="margin-top:10px;">
+            <button class="btn secondary" id="scrHint">Get a hint</button>
+            <button class="btn" id="scrCheck">Check answers</button>
+          </div>
+          <div class="toast" id="scrToast"></div>
+        </div>
+        <div class="panel">
+          <h2>Rules</h2>
+          <p class="small">You need all 3 correct to pass.</p>
+          <p class="small">Tip: spelling matters — but caps don’t.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- SECTION 2 -->
+    <div class="section" id="s2">
+      <div class="grid2">
+        <div class="panel">
+          <h2>(ii) Green-majority flags</h2>
+          <p class="small">Pick <b>3 countries</b> whose flags are mostly green.</p>
+          <div id="greenChoices" class="row"></div>
+          <div class="row" style="margin-top:10px;">
+            <button class="btn secondary" id="greenReset">Reset</button>
+            <button class="btn" id="greenCheck">Check</button>
+          </div>
+          <div class="toast" id="greenToast"></div>
+        </div>
+        <div class="panel">
+          <h2>Hint</h2>
+          <p class="small">Think “visually dominated by green”, not “has a tiny green stripe”.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- SECTION 3 -->
+    <div class="section" id="s3">
+      <div class="grid2">
+        <div class="panel">
+          <h2>(iii) Population giants</h2>
+          <p class="small">Name <b>7 of the top 10 most populated countries</b>. Separate by commas.</p>
+          <input id="popInput" type="text" placeholder="e.g., India, China, United States, ..."/>
+          <div class="row" style="margin-top:10px;">
+            <button class="btn secondary" id="popHint">Show a hint</button>
+            <button class="btn" id="popCheck">Check</button>
+          </div>
+          <div class="toast" id="popToast"></div>
+        </div>
+        <div class="panel">
+          <h2>Note</h2>
+          <p class="small">We accept any 7. Minor variants accepted (USA / United States, etc.).</p>
+          <p class="small">Population list based on a current ranking source. </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- SECTION 4 -->
+    <div class="section" id="s4">
+      <div class="grid2">
+        <div class="panel">
+          <h2>(iv) Guess 3 flags</h2>
+          <p class="small">Tap the correct flag for each country.</p>
+          <div id="flagQuiz"></div>
+          <div class="toast" id="flagToast"></div>
+        </div>
+        <div class="panel">
+          <h2>Tip</h2>
+          <p class="small">If you misclick, just try again — no penalty.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- SECTION 5 -->
+    <div class="section" id="s5">
+      <div class="grid2">
+        <div class="panel">
+          <h2>(v) Symmetrical flags</h2>
+          <p class="small">Name <b>3 countries</b> with clearly symmetrical flags (design symmetry). Separate by commas.</p>
+          <input id="symInput" type="text" placeholder="e.g., Japan, Switzerland, ..."/>
+          <div class="row" style="margin-top:10px;">
+            <button class="btn secondary" id="symHint">Hint</button>
+            <button class="btn" id="symCheck">Check</button>
+          </div>
+          <div class="toast" id="symToast"></div>
+        </div>
+        <div class="panel">
+          <h2>Accepted answers</h2>
+          <p class="small">We accept several. You just need 3 from our accepted set.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- SECTION 6 -->
+    <div class="section" id="s6">
+      <div class="grid2">
+        <div class="panel">
+          <h2>(vi) Country by borders</h2>
+          <p class="small">A country is highlighted in red. Type its name.</p>
+          <div class="mapWrap">
+            <svg id="mapSvg" viewBox="0 0 1000 520" preserveAspectRatio="xMidYMid meet"></svg>
+          </div>
+          <div style="margin-top:10px;">
+            <input id="mapGuess" type="text" placeholder="Your guess..."/>
+          </div>
+          <div class="row" style="margin-top:10px;">
+            <button class="btn secondary" id="mapHint">Hint</button>
+            <button class="btn" id="mapCheck">Check</button>
+          </div>
+          <div class="toast" id="mapToast"></div>
+        </div>
+        <div class="panel">
+          <h2>How this works</h2>
+          <p class="small">This uses a simplified world map in the browser. If it doesn’t load, refresh once.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- FINAL -->
+    <div class="section" id="final">
+      <div class="panel">
+        <h2>All done 😌</h2>
+        <p class="small">Now enter the <b>magic number</b>.</p>
+        <button class="btn" id="openLock">Enter magic number</button>
+      </div>
+    </div>
+
+  </div>
 </div>
 
-<div id="hint">Find the hidden digits. Then unlock the photo with the passcode.</div>
+<!-- Digit popup -->
+<div class="overlay" id="digitOverlay">
+  <div class="modal">
+    <div class="center" style="color:var(--muted);">You got a digit</div>
+    <div class="bigDigit" id="digitBig">1</div>
+    <p class="center" style="color:var(--muted); margin-top:0;">Remember it. Keep going.</p>
+    <button class="btn" id="digitContinue">Continue</button>
+  </div>
+</div>
 
-<div id="overlay">
-  <div class="modal" id="modal">
-    <h2 id="modalTitle">Unlock</h2>
-    <p id="modalText">Enter the 4-digit passcode using the digits you found.</p>
+<!-- Lock / photo modal -->
+<div class="overlay" id="lockOverlay">
+  <div class="modal" id="lockModal">
+    <h2 id="lockTitle">Magic Number ✨</h2>
+    <p id="lockText" style="color:var(--muted);">Enter the 6-digit magic number.</p>
 
-    <div class="pinBoxes" id="pinBoxes">
-      <div class="pinBox" id="p0"> </div>
-      <div class="pinBox" id="p1"> </div>
-      <div class="pinBox" id="p2"> </div>
-      <div class="pinBox" id="p3"> </div>
+    <div class="pinBoxes">
+      <div class="pinBox" id="p0"></div>
+      <div class="pinBox" id="p1"></div>
+      <div class="pinBox" id="p2"></div>
+      <div class="pinBox" id="p3"></div>
+      <div class="pinBox" id="p4"></div>
+      <div class="pinBox" id="p5"></div>
     </div>
 
     <div class="keypad" id="keypad"></div>
 
-    <div class="row2">
+    <div class="row" style="margin-top:10px;">
       <button class="btn secondary" id="clearBtn">Clear</button>
-      <button class="btn" id="submitBtn">Unlock</button>
+      <button class="btn" id="unlockBtn">Unlock</button>
     </div>
 
     <div id="photoWrap">
-      <img src="us.jpg" alt="Us" onerror="this.outerHTML='<div style=&quot;padding:12px;color:#ffd0d0&quot;><b>Missing us.jpg</b><br/>Put a photo named <b>us.jpg</b> inside <b>day2/</b>.</div>';">
+      <img src="us.jpg" alt="Us"
+        onerror="this.outerHTML='<div style=&quot;padding:12px;color:#ffd0d0&quot;><b>Missing us.jpg</b><br/>Put a photo named <b>us.jpg</b> inside <b>day2/</b>.</div>';">
     </div>
 
     <div class="wordCard" id="wordCard" style="display:none;">
       <div style="color:var(--muted); font-size:13px;">Word of the Day</div>
       <div class="wordBig" id="word">YOU</div>
-      <p style="margin:8px 0 0; color:var(--muted); font-size:13px;">Please remember this word carefully.</p>
+      <p class="small" style="margin:8px 0 0;">Please remember this word carefully.</p>
       <button class="btn" id="rememberBtn" style="margin-top:10px;">I’ll remember it ✅</button>
     </div>
   </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/three@0.160.0/examples/js/controls/OrbitControls.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/topojson-client@3.1.0/dist/topojson-client.min.js"></script>
 
 <script>
 (() => {
-  // ===== Day 2 configuration =====
-  const KEY = "val_week_day2_propose_v1";
+  const KEY = "val_week_day2_countryquest_v2";
 
-  // The digits she must collect (they’ll be shown scrambled in UI)
-  const DIGITS_TO_FIND = ["2","0","2","5"];   // you can change this anytime
+  // She receives digits in this order (one per game):
+  const AWARD_DIGITS = ["1","5","2","1","0","2"];  // 152102
 
-  // The actual passcode she must type (unscramble)
-  const PASSCODE = "2025";                    // change if you want
+  // But the magic number she must enter is:
+  const PASSCODE = "121025";
 
-  // Word of the day (only show the word; no spoiler sentence)
+  // Word of the day:
   const WORD_OF_DAY = "YOU";
 
-  // ===== State =====
+  // ========= Utilities =========
+  const $ = (id) => document.getElementById(id);
+  const norm = (s) => (s||"")
+    .toLowerCase()
+    .replace(/[^a-z\s]/g," ")
+    .replace(/\s+/g," ")
+    .trim();
+  const unique = (arr) => [...new Set(arr)];
+
+  function showToast(id, type, text){
+    const el = $(id);
+    el.className = "toast " + type;
+    el.textContent = text;
+    el.style.display = type ? "block" : "none";
+  }
+
+  function setSection(id){
+    document.querySelectorAll(".section").forEach(s => s.classList.remove("active"));
+    $(id).classList.add("active");
+  }
+
+  // ========= State =========
   const state = loadState();
+  updateDigitBoxes();
+  route();
 
-  const digitsEl = document.getElementById("digits");
-  const toastEl = document.getElementById("toast");
-  const overlay = document.getElementById("overlay");
-  const modal = document.getElementById("modal");
-  const modalTitle = document.getElementById("modalTitle");
-  const modalText = document.getElementById("modalText");
-  const keypad = document.getElementById("keypad");
-  const clearBtn = document.getElementById("clearBtn");
-  const submitBtn = document.getElementById("submitBtn");
-  const photoWrap = document.getElementById("photoWrap");
-  const wordCard = document.getElementById("wordCard");
-  const wordEl = document.getElementById("word");
-  const rememberBtn = document.getElementById("rememberBtn");
-
-  wordEl.textContent = WORD_OF_DAY;
-
-  function showToast(type, text){
-    toastEl.className = "";
-    toastEl.style.display = "block";
-    toastEl.textContent = text;
-    toastEl.classList.add(type);
-    if (!text) toastEl.style.display = "none";
-  }
-
-  // Show scrambled digits (so she has to rearrange mentally)
-  function updateDigitsUI(){
-    const found = state.foundDigits.slice();
-    const display = scramble(found);
-    const slots = [];
-    for (let i=0;i<4;i++){
-      slots.push(display[i] ?? "_");
-    }
-    digitsEl.textContent = slots.join(" ");
-  }
-
-  function scramble(arr){
-    const a = arr.slice();
-    for (let i=a.length-1;i>0;i--){
-      const j = Math.floor(Math.random()*(i+1));
-      [a[i],a[j]] = [a[j],a[i]];
-    }
-    return a;
-  }
-
-  updateDigitsUI();
-
-  // ===== Build keypad =====
-  let entered = "";
-  function setPinBoxes(){
-    for (let i=0;i<4;i++){
-      document.getElementById("p"+i).textContent = entered[i] ? "•" : "";
+  function loadState(){
+    try{
+      const raw = localStorage.getItem(KEY);
+      if (!raw) return { stage:1, awardedCount:0, solved:{} };
+      const s = JSON.parse(raw);
+      return {
+        stage: Math.min(7, Math.max(1, s.stage || 1)),
+        awardedCount: Math.min(6, Math.max(0, s.awardedCount || 0)),
+        solved: s.solved || {}
+      };
+    } catch {
+      return { stage:1, awardedCount:0, solved:{} };
     }
   }
-  function openUnlock(){
-    overlay.classList.add("show");
-    modalTitle.textContent = "Unlock the gift";
-    modalText.textContent = "Enter the 4-digit passcode. (Use the digits you found.)";
+  function saveState(){ localStorage.setItem(KEY, JSON.stringify(state)); }
+
+  function updateDigitBoxes(){
+    for (let i=0;i<6;i++){
+      const box = $("d"+i);
+      if (state.awardedCount > i){
+        box.classList.add("on");
+        box.textContent = AWARD_DIGITS[i];
+      } else {
+        box.classList.remove("on");
+        box.textContent = "•";
+      }
+    }
+  }
+
+  function awardDigit(){
+    const digit = AWARD_DIGITS[state.awardedCount];
+    $("digitBig").textContent = digit;
+    $("digitOverlay").classList.add("show");
+  }
+
+  $("digitContinue").onclick = () => {
+    $("digitOverlay").classList.remove("show");
+    state.awardedCount++;
+    updateDigitBoxes();
+    state.stage++;
+    saveState();
+    route();
+  };
+
+  function route(){
+    if (state.stage === 1) setSection("s1");
+    else if (state.stage === 2) setSection("s2");
+    else if (state.stage === 3) setSection("s3");
+    else if (state.stage === 4) setSection("s4");
+    else if (state.stage === 5) setSection("s5");
+    else if (state.stage === 6) setSection("s6");
+    else setSection("final");
+  }
+
+  // ========= (i) Unscramble 3 countries =========
+  const SCRAMBLE = [
+    { scrambled: "RNEAMYG", answer: "germany", hint: "A country famous for Heidelberg." },
+    { scrambled: "IYTL A",  answer: "italy",   hint: "A boot-shaped country in Europe." },
+    { scrambled: "GDNALBANH", answer: "bangladesh", hint: "A densely populated South Asian country." }
+  ];
+  let scrHintsUsed = 0;
+
+  function renderScramble(){
+    const wrap = $("scrambleArea");
+    wrap.innerHTML = "";
+    SCRAMBLE.forEach((q, idx) => {
+      const div = document.createElement("div");
+      div.style.marginTop = "10px";
+      div.innerHTML = `
+        <div class="small"><b>Scramble ${idx+1}:</b> ${q.scrambled}</div>
+        <input type="text" id="scrIn${idx}" placeholder="Your answer..." />
+        <div class="small" id="scrH${idx}" style="display:none; margin-top:6px;">Hint: ${q.hint}</div>
+      `;
+      wrap.appendChild(div);
+    });
+  }
+  renderScramble();
+
+  $("scrHint").onclick = () => {
+    if (scrHintsUsed >= 3) return;
+    $("scrH"+scrHintsUsed).style.display = "block";
+    scrHintsUsed++;
+  };
+
+  $("scrCheck").onclick = () => {
+    let ok = 0;
+    for (let i=0;i<SCRAMBLE.length;i++){
+      const got = norm($("scrIn"+i).value);
+      if (got === SCRAMBLE[i].answer) ok++;
+    }
+    if (ok === 3){
+      showToast("scrToast", "ok", "Perfect ✅ Moving on…");
+      if (!state.solved.s1){
+        state.solved.s1 = true; saveState();
+        awardDigit();
+      }
+    } else {
+      showToast("scrToast", "bad", `You got ${ok}/3. Try again 🙂`);
+    }
+  };
+
+  // ========= (ii) Green-majority flags =========
+  const GREEN_SET = new Set(["nigeria","pakistan","bangladesh"]);
+  const GREEN_CHOICES = ["Nigeria","Pakistan","Bangladesh","France","Japan","Brazil"];
+  const selectedGreen = new Set();
+
+  function renderGreenChoices(){
+    const box = $("greenChoices");
+    box.innerHTML = "";
+    GREEN_CHOICES.forEach(name => {
+      const b = document.createElement("button");
+      b.className = "btn secondary";
+      b.style.width = "auto";
+      b.textContent = name;
+      b.onclick = () => {
+        const k = norm(name);
+        if (selectedGreen.has(k)){
+          selectedGreen.delete(k);
+          b.style.outline = "none";
+          b.style.borderColor = "rgba(255,255,255,.18)";
+        } else {
+          selectedGreen.add(k);
+          b.style.outline = "2px solid rgba(47,255,122,.6)";
+          b.style.borderColor = "rgba(47,255,122,.6)";
+        }
+      };
+      box.appendChild(b);
+    });
+  }
+  renderGreenChoices();
+
+  $("greenReset").onclick = () => {
+    selectedGreen.clear();
+    renderGreenChoices();
+    showToast("greenToast","", "");
+  };
+
+  $("greenCheck").onclick = () => {
+    if (selectedGreen.size !== 3){
+      showToast("greenToast","bad","Pick exactly 3.");
+      return;
+    }
+    let ok = 0;
+    selectedGreen.forEach(k => { if (GREEN_SET.has(k)) ok++; });
+    if (ok === 3){
+      showToast("greenToast","ok","Nice eyes ✅");
+      if (!state.solved.s2){
+        state.solved.s2 = true; saveState();
+        awardDigit();
+      }
+    } else {
+      showToast("greenToast","bad","Not quite — you picked at least one that isn’t green-majority.");
+    }
+  };
+
+  // ========= (iii) 7 of top 10 most populated =========
+  // Accept canonical top-10 set (with variants). Source list commonly matches Worldometer-style rankings.
+  const TOP10 = new Set([
+    "india","china","united states","usa","us","indonesia","pakistan","nigeria","brazil","bangladesh","russia","ethiopia"
+  ]);
+  const TOP10_CANON = new Set([
+    "india","china","united states","indonesia","pakistan","nigeria","brazil","bangladesh","russia","ethiopia"
+  ]);
+
+  $("popHint").onclick = () => {
+    showToast("popToast","ok","Hint: Think India, China, USA… then big ones like Indonesia, Brazil, and a fast-growing African country.");
+  };
+
+  $("popCheck").onclick = () => {
+    const raw = $("popInput").value || "";
+    const parts = unique(raw.split(",").map(s => norm(s)).filter(Boolean));
+    const mapped = parts.map(p => {
+      if (p === "us" || p === "u s" || p === "u s a" || p === "america") return "united states";
+      return p;
+    });
+
+    const hits = new Set();
+    mapped.forEach(m => {
+      if (TOP10.has(m)){
+        if (m === "usa" || m === "us") m = "united states";
+        if (TOP10_CANON.has(m)) hits.add(m);
+      }
+    });
+
+    if (hits.size >= 7){
+      showToast("popToast","ok",`Great ✅ You got ${hits.size}/10 (need 7).`);
+      if (!state.solved.s3){
+        state.solved.s3 = true; saveState();
+        awardDigit();
+      }
+    } else {
+      showToast("popToast","bad",`You got ${hits.size}/10. Need at least 7. Try again 🙂`);
+    }
+  };
+
+  // ========= (iv) Guess 3 flags =========
+  const FLAG_ROUNDS = [
+    { target:"Japan",   options:["Japan","Poland","Indonesia"] },
+    { target:"Germany", options:["Belgium","Germany","Netherlands"] },
+    { target:"Brazil",  options:["Brazil","Bolivia","Gabon"] }
+  ];
+  let flagRoundIdx = 0;
+
+  function flagUrl(country){
+    const iso = {
+      Japan:"jp", Poland:"pl", Indonesia:"id",
+      Belgium:"be", Germany:"de", Netherlands:"nl",
+      Brazil:"br", Bolivia:"bo", Gabon:"ga"
+    }[country];
+    return `https://flagcdn.com/w320/${iso}.png`;
+  }
+
+  function renderFlagRound(){
+    const wrap = $("flagQuiz");
+    wrap.innerHTML = "";
+    const r = FLAG_ROUNDS[flagRoundIdx];
+
+    const head = document.createElement("div");
+    head.className = "panel";
+    head.style.marginBottom = "10px";
+    head.innerHTML = `<div class="small">Round ${flagRoundIdx+1}/3</div><h2 style="margin:6px 0 0;">Find: <b>${r.target}</b></h2>`;
+    wrap.appendChild(head);
+
+    const grid = document.createElement("div");
+    grid.className = "flagGrid";
+    r.options.forEach(opt => {
+      const card = document.createElement("div");
+      card.className = "flagCard";
+      card.innerHTML = `
+        <img src="${flagUrl(opt)}" alt="${opt} flag"/>
+        <div class="cap">Tap this</div>
+      `;
+      card.onclick = () => {
+        if (opt === r.target){
+          showToast("flagToast","ok","Correct ✅");
+          flagRoundIdx++;
+          if (flagRoundIdx >= FLAG_ROUNDS.length){
+            if (!state.solved.s4){
+              state.solved.s4 = true; saveState();
+              awardDigit();
+            }
+          } else {
+            renderFlagRound();
+          }
+        } else {
+          showToast("flagToast","bad","Nope 🙂 try another.");
+        }
+      };
+      grid.appendChild(card);
+    });
+    wrap.appendChild(grid);
+  }
+  renderFlagRound();
+
+  // ========= (v) Symmetrical flags =========
+  const SYM = new Set([
+    "japan","switzerland","vatican city","iceland","norway","finland","sweden",
+    "greece","israel","austria","peru","canada","bangladesh"
+  ]);
+
+  $("symHint").onclick = () => {
+    showToast("symToast","ok","Hint: Japan and Switzerland are easy wins.");
+  };
+
+  $("symCheck").onclick = () => {
+    const raw = $("symInput").value || "";
+    const parts = unique(raw.split(",").map(s => norm(s)).filter(Boolean));
+    const mapped = parts.map(p => p === "vatican" ? "vatican city" : p);
+
+    const hits = new Set();
+    mapped.forEach(m => { if (SYM.has(m)) hits.add(m); });
+
+    if (hits.size >= 3){
+      showToast("symToast","ok",`Nice ✅ (${hits.size} accepted)`);
+      if (!state.solved.s5){
+        state.solved.s5 = true; saveState();
+        awardDigit();
+      }
+    } else {
+      showToast("symToast","bad",`You have ${hits.size}/3 accepted. Try again 🙂`);
+    }
+  };
+
+  // ========= (vi) Country by borders (map) =========
+  const MAP_ROUNDS = [
+    { name:"Italy", hint:"Boot-shaped peninsula in Europe." },
+    { name:"India", hint:"Big South Asian country with a tapering peninsula." },
+    { name:"Brazil", hint:"Largest country in South America." }
+  ];
+  let mapIdx = 0;
+
+  $("mapHint").onclick = () => showToast("mapToast","ok","Hint: " + MAP_ROUNDS[mapIdx].hint);
+
+  $("mapCheck").onclick = () => {
+    const got = norm($("mapGuess").value);
+    if (got === norm(MAP_ROUNDS[mapIdx].name)){
+      showToast("mapToast","ok","Correct ✅");
+      mapIdx++;
+      $("mapGuess").value = "";
+      if (mapIdx >= MAP_ROUNDS.length){
+        if (!state.solved.s6){
+          state.solved.s6 = true; saveState();
+          awardDigit();
+        }
+      } else {
+        drawMapRound();
+      }
+    } else {
+      showToast("mapToast","bad","Not quite 🙂 Try again.");
+    }
+  };
+
+  async function drawMapRound(){
+    showToast("mapToast","", "");
+    const svg = d3.select("#mapSvg");
+    svg.selectAll("*").remove();
+
+    const topo = await fetch("https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json").then(r => r.json());
+    const countries = topojson.feature(topo, topo.objects.countries);
+
+    const names = await fetch("https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.tsv").then(r=>r.text());
+    const idToName = new Map(names.trim().split("\n").slice(1).map(line => {
+      const [id, name] = line.split("\t");
+      return [+id, name];
+    }));
+
+    const width = 1000, height = 520;
+    const projection = d3.geoNaturalEarth1().fitSize([width, height], countries);
+    const path = d3.geoPath(projection);
+
+    const targetName = MAP_ROUNDS[mapIdx].name;
+
+    svg.append("g")
+      .selectAll("path")
+      .data(countries.features)
+      .join("path")
+      .attr("d", path)
+      .attr("fill", d => (idToName.get(d.id) === targetName) ? "rgba(255,77,125,.95)" : "rgba(255,255,255,.07)")
+      .attr("stroke", "rgba(255,255,255,.14)")
+      .attr("stroke-width", 0.6);
+
+    svg.append("text")
+      .attr("x", 20).attr("y", 34)
+      .attr("fill", "rgba(255,255,255,.78)")
+      .attr("font-size", 18)
+      .attr("font-weight", 800)
+      .text(`Round ${mapIdx+1}/3`);
+  }
+
+  // Start map when reaching section 6
+  const origRoute = route;
+  route = function(){
+    origRoute();
+    if (state.stage === 6){
+      drawMapRound().catch(() => showToast("mapToast","bad","Map failed to load. Refresh once."));
+    }
+  };
+  route();
+
+  // ========= Final lock =========
+  $("openLock").onclick = () => {
+    $("lockOverlay").classList.add("show");
     buildKeypad();
     entered = "";
-    setPinBoxes();
-    showToast("", "");
+    setPin();
+    $("lockText").textContent = "Enter the 6-digit magic number.";
+  };
+
+  let entered = "";
+  function setPin(){
+    for (let i=0;i<6;i++){
+      $("p"+i).textContent = entered[i] ? "•" : "";
+    }
   }
+
   function buildKeypad(){
-    keypad.innerHTML = "";
+    const kp = $("keypad");
+    kp.innerHTML = "";
     const keys = ["1","2","3","4","5","6","7","8","9","⌫","0","OK"];
     keys.forEach(k => {
       const div = document.createElement("div");
@@ -299,607 +849,55 @@
       div.onclick = () => {
         if (k === "⌫"){
           entered = entered.slice(0,-1);
-          setPinBoxes();
+          setPin();
           return;
         }
         if (k === "OK"){
           tryUnlock();
           return;
         }
-        if (entered.length >= 4) return;
+        if (entered.length >= 6) return;
         entered += k;
-        setPinBoxes();
-        if (entered.length === 4) {
-          // small auto-submit feel on mobile
-          // (but still let OK/Unlock button work)
-        }
+        setPin();
       };
-      keypad.appendChild(div);
+      kp.appendChild(div);
     });
   }
-  clearBtn.onclick = () => { entered = ""; setPinBoxes(); };
-  submitBtn.onclick = () => tryUnlock();
+
+  $("clearBtn").onclick = () => { entered=""; setPin(); };
 
   function tryUnlock(){
-    if (entered.length !== 4){
+    const modal = $("lockModal");
+    if (entered.length !== 6){
       modal.classList.remove("shake"); void modal.offsetWidth; modal.classList.add("shake");
-      showToast("bad", "Enter 4 digits 🙂");
+      $("lockText").textContent = "Enter all 6 digits 🙂";
       return;
     }
     if (entered === PASSCODE){
-      showToast("ok", "Unlocked 😌");
-      photoWrap.classList.add("show");
-      wordCard.style.display = "block";
-      // lock keypad after success
-      keypad.querySelectorAll(".key").forEach(k => k.style.pointerEvents="none");
-      submitBtn.disabled = true; submitBtn.style.opacity = "0.6";
-      clearBtn.disabled = true; clearBtn.style.opacity = "0.6";
-      popConfetti(220);
+      $("lockText").textContent = "Unlocked 😌";
+      $("photoWrap").classList.add("show");
+      $("wordCard").style.display = "block";
+      $("word").textContent = WORD_OF_DAY;
+      // disable keypad after success
+      $("keypad").querySelectorAll(".key").forEach(k => k.style.pointerEvents="none");
+      $("unlockBtn").disabled = true; $("unlockBtn").style.opacity = "0.6";
+      $("clearBtn").disabled = true; $("clearBtn").style.opacity = "0.6";
     } else {
       modal.classList.remove("shake"); void modal.offsetWidth; modal.classList.add("shake");
-      showToast("bad", "Not quite. Try rearranging the digits you found.");
+      $("lockText").textContent = "Not quite. The digits you received might need reordering.";
       entered = "";
-      setPinBoxes();
+      setPin();
     }
   }
 
-  rememberBtn.onclick = () => {
-    // Save the word (optional)
-    state.word = WORD_OF_DAY;
-    state.remembered = true;
-    saveState();
+  $("unlockBtn").onclick = tryUnlock;
 
-    popConfetti(160);
-
-    // Restart Day 2 cleanly
+  $("rememberBtn").onclick = () => {
     setTimeout(() => {
       localStorage.removeItem(KEY);
       location.reload();
-    }, 900);
+    }, 700);
   };
-
-  // ===== THREE.JS SCENE =====
-  const scene = new THREE.Scene();
-  scene.background = new THREE.Color(0x0b1020);
-
-  const camera = new THREE.PerspectiveCamera(60, window.innerWidth/window.innerHeight, 0.1, 100);
-  camera.position.set(0, 2.2, 6.2);
-
-  const renderer = new THREE.WebGLRenderer({ antialias:true });
-  renderer.setSize(window.innerWidth, window.innerHeight);
-  renderer.setPixelRatio(Math.min(2, window.devicePixelRatio || 1));
-  document.body.appendChild(renderer.domElement);
-
-  const controls = new THREE.OrbitControls(camera, renderer.domElement);
-  controls.enablePan = false;
-  controls.maxPolarAngle = Math.PI / 2.05;
-  controls.minDistance = 3.0;
-  controls.maxDistance = 10.0;
-
-  // Lights with “fade-in”
-  const ambient = new THREE.AmbientLight(0xffffff, 0.05);
-  scene.add(ambient);
-
-  const warm = new THREE.PointLight(0xffb3c7, 0.0, 40);
-  warm.position.set(2,4,2);
-  scene.add(warm);
-
-  const cool = new THREE.PointLight(0x7aa7ff, 0.0, 40);
-  cool.position.set(-2,3,-2);
-  scene.add(cool);
-
-  // Room (box)
-  const room = new THREE.Mesh(
-    new THREE.BoxGeometry(10,5,10),
-    new THREE.MeshStandardMaterial({ color:0x1a1f3a, side:THREE.BackSide, roughness:0.95 })
-  );
-  scene.add(room);
-
-  // Floor accent
-  const floor = new THREE.Mesh(
-    new THREE.PlaneGeometry(10,10),
-    new THREE.MeshStandardMaterial({ color:0x121a33, roughness:0.95, metalness:0.0 })
-  );
-  floor.rotation.x = -Math.PI/2;
-  floor.position.y = -0.01;
-  scene.add(floor);
-
-  // Objects (clickable) + subtle idle animation
-  const objects = [];
-  const idle = [];
-
-  function mkMat(color){
-    return new THREE.MeshStandardMaterial({ color, roughness:0.55, metalness:0.15, emissive:0x000000 });
-  }
-
-  function addClickable(name, geo, mat, pos, digit){
-    const m = new THREE.Mesh(geo, mat);
-    m.position.copy(pos);
-    m.userData = { name, digit, found:false, baseY:pos.y, t:Math.random()*10 };
-    scene.add(m);
-    objects.push(m);
-    idle.push(m);
-    return m;
-  }
-
-  // Place 4 clickable objects
-// ===== “Real” room props (no assets) =====
-
-// A helper to make grouped objects
-  function addGroup(name, pos){
-    const g = new THREE.Group();
-    g.name = name;
-    g.position.copy(pos);
-    scene.add(g);
-    return g;
-  }
-
-  // Table (top + legs). Not clickable itself, just decor.
-  {
-    const g = addGroup("tableGroup", new THREE.Vector3(0, 0, 0));
-
-    const top = new THREE.Mesh(
-      new THREE.BoxGeometry(2.2, 0.14, 1.15),
-      mkMat(0x8b5a2b)
-    );
-    top.position.set(0, 0.75, 0);
-    g.add(top);
-
-    const legMat = mkMat(0x5a3a1e);
-    const legGeo = new THREE.BoxGeometry(0.12, 0.75, 0.12);
-    const legPos = [
-      [-1.00, 0.375, -0.48],
-      [ 1.00, 0.375, -0.48],
-      [-1.00, 0.375,  0.48],
-      [ 1.00, 0.375,  0.48],
-    ];
-    legPos.forEach(([x,y,z]) => {
-      const leg = new THREE.Mesh(legGeo, legMat);
-      leg.position.set(x,y,z);
-      g.add(leg);
-    });
-  }
-
-// Chair (seat + back + legs). Decor.
-  {
-    const g = addGroup("chairGroup", new THREE.Vector3(-1.4, 0, 1.2));
-
-    const seat = new THREE.Mesh(
-      new THREE.BoxGeometry(0.7, 0.10, 0.7),
-      mkMat(0x3b3b46)
-    );
-    seat.position.set(0, 0.45, 0);
-    g.add(seat);
-
-    const back = new THREE.Mesh(
-      new THREE.BoxGeometry(0.7, 0.8, 0.10),
-      mkMat(0x2c2c36)
-    );
-    back.position.set(0, 0.85, -0.30);
-    g.add(back);
-
-    const legMat = mkMat(0x1e1e26);
-    const legGeo = new THREE.BoxGeometry(0.08, 0.45, 0.08);
-    const legPos = [
-      [-0.28, 0.225, -0.28],
-      [ 0.28, 0.225, -0.28],
-      [-0.28, 0.225,  0.28],
-      [ 0.28, 0.225,  0.28],
-    ];
-    legPos.forEach(([x,y,z]) => {
-      const leg = new THREE.Mesh(legGeo, legMat);
-      leg.position.set(x,y,z);
-      g.add(leg);
-    });
-
-    g.rotation.y = 0.45;
-  }
-
-// Plant (pot + leaves). Decor.
-  {
-    const g = addGroup("plantGroup", new THREE.Vector3(2.2, 0, 1.6));
-
-    const pot = new THREE.Mesh(
-      new THREE.CylinderGeometry(0.22, 0.28, 0.35, 18),
-      mkMat(0x7a4b2a)
-    );
-    pot.position.set(0, 0.18, 0);
-    g.add(pot);
-
-    const stem = new THREE.Mesh(
-      new THREE.CylinderGeometry(0.03, 0.04, 0.45, 12),
-      mkMat(0x2c7a4b)
-    );
-    stem.position.set(0, 0.55, 0);
-    g.add(stem);
-
-    const leafMat = mkMat(0x2fff7a);
-    leafMat.roughness = 0.8;
-    for (let i=0;i<6;i++){
-      const leaf = new THREE.Mesh(
-        new THREE.SphereGeometry(0.14, 14, 14),
-        leafMat
-      );
-      const a = i * (Math.PI*2/6);
-      leaf.position.set(Math.cos(a)*0.18, 0.75 + Math.random()*0.12, Math.sin(a)*0.18);
-      g.add(leaf);
-    }
-  }
-
-// Lamp (stand + shade) + extra warm point light. Decor.
-  let lampLight;
-  {
-    const g = addGroup("lampGroup", new THREE.Vector3(0.8, 0, -1.6));
-  
-    const base = new THREE.Mesh(
-      new THREE.CylinderGeometry(0.18, 0.22, 0.08, 16),
-      mkMat(0x4a4a56)
-    );
-    base.position.set(0, 0.04, 0);
-    g.add(base);
-
-    const pole = new THREE.Mesh(
-      new THREE.CylinderGeometry(0.04, 0.04, 1.1, 16),
-      mkMat(0x6c6c7a)
-    );
-    pole.position.set(0, 0.60, 0);
-    g.add(pole);
-
-    const shade = new THREE.Mesh(
-      new THREE.ConeGeometry(0.28, 0.40, 20),
-      mkMat(0xffe7d1)
-    );
-    shade.position.set(0, 1.25, 0);
-    shade.rotation.x = Math.PI;
-    g.add(shade);
-
-    // actual light
-    lampLight = new THREE.PointLight(0xffd3a8, 0.0, 12);
-    lampLight.position.set(0.8, 1.25, -1.6);
-    scene.add(lampLight);
-  }
-
-  // Cabinet with a drawer that opens (CLICKABLE HANDLE reveals a digit)
-  const cabinet = new THREE.Group();
-  cabinet.position.set(-2.4, 0, -1.6);
-  scene.add(cabinet);
-
-  {
-    const body = new THREE.Mesh(
-      new THREE.BoxGeometry(1.2, 1.0, 0.6),
-      mkMat(0x2f344f)
-    );
-    body.position.set(0, 0.5, 0);
-    cabinet.add(body);
-
-    // Drawer box (slides out)
-    const drawer = new THREE.Mesh(
-      new THREE.BoxGeometry(1.05, 0.28, 0.55),
-      mkMat(0x3b4163)
-    );
-    drawer.position.set(0, 0.55, 0.02);
-    drawer.userData = { isDrawer:true, open:false, anim:0 }; // anim 0..1
-    cabinet.add(drawer);
-
-  // Handle is the clickable part (small cylinder)
-    const handle = new THREE.Mesh(
-      new THREE.CylinderGeometry(0.03, 0.03, 0.28, 12),
-      mkMat(0xdcdcff)
-    );
-    handle.rotation.z = Math.PI/2;
-    handle.position.set(0, 0.55, 0.32);
-    handle.userData = { clickable:true, kind:"drawerHandle", digit: DIGITS_TO_FIND[1], found:false };
-    cabinet.add(handle);
-
-  // add to clickable list + idle list for slight pulse until found
-    objects.push(handle);
-    idle.push(handle);
-
-  // Keep references for animation tick
-    scene.userData.drawer = drawer;
-    scene.userData.drawerHandle = handle;
-  }
-
-// Now the remaining 3 clickable objects are: box, book, frame.
-// We'll place them on/near the table & wall:
-
-// Box (clickable digit)
-  const box = addClickable(
-    "Box",
-    new THREE.BoxGeometry(0.65,0.65,0.65),
-    mkMat(0xff4d7d),
-    new THREE.Vector3(-0.6, 1.08, 0.2),
-    DIGITS_TO_FIND[0]
-  );
-
-// Book (clickable digit)
-  const book = addClickable(
-    "Book",
-    new THREE.BoxGeometry(1,0.10,0.70),
-    mkMat(0x4da6ff),
-    new THREE.Vector3(0.8, 1.02, -0.1),
-    DIGITS_TO_FIND[2]
-  );
-
-// Frame (clickable digit) on the wall
-  const frame = addClickable(
-    "Frame",
-    new THREE.BoxGeometry(0.75,0.75,0.05),
-    mkMat(0xffffff),
-    new THREE.Vector3(0, 1.65, -4.9),
-    DIGITS_TO_FIND[3]
-  );
-  frame.rotation.y = 0.02;
-
-
-  // Give a tiny rotation to wall frame so it “faces in”
-  frame.rotation.y = 0.02;
-
-  // Floating digit sprites (simple canvas textures)
-  const floatDigits = [];
-  function makeDigitSprite(text){
-    const c = document.createElement("canvas");
-    c.width = 256; c.height = 256;
-    const ctx = c.getContext("2d");
-    ctx.clearRect(0,0,256,256);
-    ctx.beginPath();
-    ctx.arc(128,128,92,0,Math.PI*2);
-    ctx.fillStyle = "rgba(0,0,0,.45)";
-    ctx.fill();
-    ctx.lineWidth = 8;
-    ctx.strokeStyle = "rgba(255,255,255,.25)";
-    ctx.stroke();
-
-    ctx.fillStyle = "white";
-    ctx.font = "900 120px system-ui";
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-    ctx.fillText(text, 128, 132);
-
-    const tex = new THREE.CanvasTexture(c);
-    tex.needsUpdate = true;
-    const mat = new THREE.SpriteMaterial({ map: tex, transparent:true });
-    const spr = new THREE.Sprite(mat);
-    spr.scale.set(0.8,0.8,0.8);
-    return spr;
-  }
-
-  function popDigitAt(digit, worldPos){
-    const spr = makeDigitSprite(digit);
-    spr.position.copy(worldPos.clone().add(new THREE.Vector3(0, 0.8, 0)));
-    spr.userData = { life: 0, vy: 0.6 };
-    scene.add(spr);
-    floatDigits.push(spr);
-  }
-
-  // Click detection (mouse + touch)
-  const raycaster = new THREE.Raycaster();
-  const pointer = new THREE.Vector2();
-
-  function setPointerFromEvent(e){
-    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-    pointer.x = (clientX / window.innerWidth) * 2 - 1;
-    pointer.y = -(clientY / window.innerHeight) * 2 + 1;
-  }
-
-function onPick(e){
-  setPointerFromEvent(e);
-  raycaster.setFromCamera(pointer, camera);
-  const hit = raycaster.intersectObjects(objects);
-  if (!hit.length) return;
-
-  const obj = hit[0].object;
-
-  // ===== DRAWER SPECIAL CASE (PASTE THIS BLOCK HERE) =====
-  if (obj.userData && obj.userData.kind === "drawerHandle"){
-    const drawer = scene.userData.drawer;
-    const handle = scene.userData.drawerHandle;
-
-    if (!drawer || !handle) return;
-
-    // If already found digit, just toggle drawer
-    if (handle.userData.found){
-      drawer.userData.open = !drawer.userData.open;
-      drawer.userData.animTarget = drawer.userData.open ? 1 : 0;
-      return;
-    }
-
-    // First time: open drawer + reveal digit
-    drawer.userData.open = true;
-    drawer.userData.animTarget = 1;
-
-    handle.userData.found = true;
-    handle.material.emissive.setHex(0x1aff88);
-    handle.userData.pop = 1.0;
-
-    popDigitAt(
-      String(handle.userData.digit),
-      handle.getWorldPosition(new THREE.Vector3())
-    );
-
-    state.foundDigits.push(String(handle.userData.digit));
-    saveState();
-    updateDigitsUI();
-    showToast("ok", `Found a digit ✅ (${state.foundDigits.length}/4)`);
-
-    if (state.foundDigits.length >= 4){
-      setTimeout(openUnlock, 700);
-    }
-    return; // ⬅️ VERY IMPORTANT
-  }
-  // ===== END DRAWER SPECIAL CASE =====
-
-  // Normal click handling for box/book/frame
-  if (obj.userData.found){
-    showToast("bad", "Already checked 😌");
-    return;
-  }
-
-  obj.userData.found = true;
-  obj.material.emissive.setHex(0x1aff88);
-  obj.userData.pop = 1.0;
-
-  popDigitAt(
-    String(obj.userData.digit),
-    obj.getWorldPosition(new THREE.Vector3())
-  );
-
-  state.foundDigits.push(String(obj.userData.digit));
-  saveState();
-  updateDigitsUI();
-  showToast("ok", `Found a digit ✅ (${state.foundDigits.length}/4)`);
-
-  if (state.foundDigits.length >= 4){
-    setTimeout(openUnlock, 700);
-  }
-}
-
-
-  window.addEventListener("click", onPick);
-  window.addEventListener("touchstart", (e) => { onPick(e); }, { passive:true });
-
-  // ===== Animate scene =====
-  let t0 = performance.now();
-  function animate(now){
-    const dt = Math.min(0.05, (now - t0) / 1000);
-    t0 = now;
-
-    // Light fade-in over ~2 seconds
-    const fade = Math.min(1, now / 2000);
-    ambient.intensity = 0.25 * fade;
-    warm.intensity = 1.00 * fade;
-    cool.intensity = 0.55 * fade;
-
-    // Idle float for unfound objects + subtle pulse
-    for (const m of idle){
-      m.userData.t += dt;
-      if (!m.userData.found){
-        m.position.y = m.userData.baseY + Math.sin(m.userData.t * 1.4) * 0.02;
-        const pulse = 0.02 + (Math.sin(m.userData.t * 2.2) * 0.01);
-        m.material.emissive.setRGB(pulse, 0.0, pulse);
-      } else {
-        // pop animation
-        if (m.userData.pop && m.userData.pop > 0){
-          m.userData.pop = Math.max(0, m.userData.pop - dt*2.4);
-          const s = 1 + m.userData.pop*0.18;
-          m.scale.set(s,s,s);
-          if (m.userData.pop === 0) m.scale.set(1,1,1);
-        }
-      }
-    }
-
-    // Floating digits drift upward and fade out
-    for (let i=floatDigits.length-1; i>=0; i--){
-      const spr = floatDigits[i];
-      spr.userData.life += dt;
-      spr.position.y += spr.userData.vy * dt;
-      spr.material.opacity = Math.max(0, 1 - spr.userData.life / 2.2);
-      if (spr.userData.life > 2.2){
-        scene.remove(spr);
-        floatDigits.splice(i,1);
-      }
-    }
-
-    renderer.render(scene, camera);
-    requestAnimationFrame(animate);
-  }
-  requestAnimationFrame(animate);
-
-  // ===== Restore found objects on reload =====
-  // If she refreshes after finding digits, keep it consistent.
-  function applyFoundState(){
-    const foundCount = state.foundDigits.length;
-    const objsInOrder = [table, box, book, frame];
-    for (let i=0; i<Math.min(4, foundCount); i++){
-      const o = objsInOrder[i];
-      o.userData.found = true;
-      o.material.emissive.setHex(0x1aff88);
-    }
-    if (foundCount >= 4){
-      setTimeout(openUnlock, 400);
-    }
-  }
-  applyFoundState();
-
-  // ===== Resize =====
-  window.addEventListener("resize", () => {
-    camera.aspect = window.innerWidth/window.innerHeight;
-    camera.updateProjectionMatrix();
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    renderer.setPixelRatio(Math.min(2, window.devicePixelRatio || 1));
-  });
-
-  // ===== Confetti (simple UI confetti) =====
-  const fx = document.createElement("canvas");
-  fx.style.position="fixed"; fx.style.inset="0"; fx.style.pointerEvents="none"; fx.style.zIndex="30";
-  document.body.appendChild(fx);
-  const fctx = fx.getContext("2d");
-  let FW,FH,parts=[],animFx=false;
-
-  function fxResize(){
-    FW = fx.width = window.innerWidth * (window.devicePixelRatio||1);
-    FH = fx.height = window.innerHeight * (window.devicePixelRatio||1);
-  }
-  window.addEventListener("resize", fxResize);
-  fxResize();
-
-  function popConfetti(n=120){
-    const dpr = (window.devicePixelRatio||1);
-    for (let i=0;i<n;i++){
-      parts.push({
-        x: Math.random()*FW,
-        y: -20*dpr,
-        vx: (Math.random()*2-1)*2.2*dpr,
-        vy: (Math.random()*2+1)*2.6*dpr,
-        r: (Math.random()*6+3)*dpr,
-        a: 1,
-        spin:(Math.random()*2-1)*0.18
-      });
-    }
-    if (!animFx) requestAnimationFrame(tickFx);
-    animFx = true;
-  }
-
-  function tickFx(){
-    fctx.clearRect(0,0,FW,FH);
-    for (const p of parts){
-      p.x += p.vx;
-      p.y += p.vy;
-      p.vy *= 1.01;
-      p.a *= 0.992;
-
-      fctx.save();
-      fctx.globalAlpha = Math.max(0, Math.min(1, p.a));
-      fctx.translate(p.x, p.y);
-      fctx.rotate(p.spin);
-      fctx.fillStyle = "white";
-      fctx.fillRect(-p.r/2, -p.r/2, p.r, p.r);
-      fctx.restore();
-    }
-    parts = parts.filter(p => p.y < FH+40 && p.a > 0.05);
-    if (parts.length) requestAnimationFrame(tickFx);
-    else animFx = false;
-  }
-
-  // ===== Storage =====
-  function loadState(){
-    try{
-      const raw = localStorage.getItem(KEY);
-      if (!raw) return { foundDigits: [], word:null, remembered:false };
-      const s = JSON.parse(raw);
-      return {
-        foundDigits: Array.isArray(s.foundDigits) ? s.foundDigits.slice(0,4) : [],
-        word: s.word || null,
-        remembered: !!s.remembered
-      };
-    }catch{
-      return { foundDigits: [], word:null, remembered:false };
-    }
-  }
-  function saveState(){
-    localStorage.setItem(KEY, JSON.stringify(state));
-  }
 
 })();
 </script>
