@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Day 2 — Propose Day 💍</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <style>
+    body { margin:0; overflow:hidden; background:#0b1020; }
+    #ui {
+      position:fixed; top:12px; left:12px;
+      background:rgba(0,0,0,.55);
+      color:#fff; padding:12px 14px;
+      border-radius:14px;
+      font-family:system-ui;
+      z-index:10;
+    }
+    #code {
+      font-weight:900; letter-spacing:.2em;
+    }
+    .hint {
+      position:fixed; bottom:12px; left:50%;
+      transform:translateX(-50%);
+      background:rgba(0,0,0,.55);
+      color:#fff; padding:10px 14px;
+      border-radius:14px;
+      font-family:system-ui;
+    }
+  </style>
+</head>
+
+<body>
+<div id="ui">
+  Digits found: <span id="code">_ _ _ _</span>
+</div>
+<div class="hint">Click objects to find hidden numbers</div>
+
+<script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.160.0/examples/js/controls/OrbitControls.js"></script>
+
+<script>
+/* ===== BASIC SETUP ===== */
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x0b1020);
+
+const camera = new THREE.PerspectiveCamera(
+  60, window.innerWidth/window.innerHeight, 0.1, 100
+);
+camera.position.set(0, 2, 6);
+
+const renderer = new THREE.WebGLRenderer({ antialias:true });
+renderer.setSize(window.innerWidth, window.innerHeight);
+document.body.appendChild(renderer.domElement);
+
+const controls = new THREE.OrbitControls(camera, renderer.domElement);
+controls.enablePan = false;
+controls.maxPolarAngle = Math.PI / 2.1;
+
+/* ===== LIGHTING ===== */
+scene.add(new THREE.AmbientLight(0xffffff, 0.4));
+const light = new THREE.PointLight(0xffb3c7, 1);
+light.position.set(2,4,2);
+scene.add(light);
+
+/* ===== ROOM ===== */
+const room = new THREE.Mesh(
+  new THREE.BoxGeometry(10,5,10),
+  new THREE.MeshStandardMaterial({ color:0x1a1f3a, side:THREE.BackSide })
+);
+scene.add(room);
+
+/* ===== OBJECTS ===== */
+const objects = [];
+const digits = [];
+
+/* helper */
+function addObject(geo, mat, pos, digit){
+  const m = new THREE.Mesh(geo, mat);
+  m.position.copy(pos);
+  m.userData.digit = digit;
+  scene.add(m);
+  objects.push(m);
+}
+
+/* Table */
+addObject(
+  new THREE.BoxGeometry(2,0.2,1),
+  new THREE.MeshStandardMaterial({ color:0x8b5a2b }),
+  new THREE.Vector3(0,0.6,0),
+  "2"
+);
+
+/* Box */
+addObject(
+  new THREE.BoxGeometry(0.6,0.6,0.6),
+  new THREE.MeshStandardMaterial({ color:0xff4d7d }),
+  new THREE.Vector3(-2,0.5,-1),
+  "0"
+);
+
+/* Book */
+addObject(
+  new THREE.BoxGeometry(1,0.1,0.7),
+  new THREE.MeshStandardMaterial({ color:0x4da6ff }),
+  new THREE.Vector3(2,0.4,-1),
+  "2"
+);
+
+/* Frame */
+addObject(
+  new THREE.BoxGeometry(0.7,0.7,0.05),
+  new THREE.MeshStandardMaterial({ color:0xffffff }),
+  new THREE.Vector3(0,1.6,-4.9),
+  "5"
+);
+
+/* ===== CLICK DETECTION ===== */
+const raycaster = new THREE.Raycaster();
+const mouse = new THREE.Vector2();
+
+window.addEventListener("click", e => {
+  mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
+  mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+  raycaster.setFromCamera(mouse, camera);
+
+  const hit = raycaster.intersectObjects(objects);
+  if (hit.length){
+    const obj = hit[0].object;
+    if (!digits.includes(obj.userData.digit)){
+      digits.push(obj.userData.digit);
+      obj.material.color.set(0x2fff7a);
+      updateCode();
+      if (digits.length === 4) unlock();
+    }
+  }
+});
+
+/* ===== UI ===== */
+function updateCode(){
+  document.getElementById("code").textContent =
+    digits.join(" ") + " _".repeat(4-digits.length);
+}
+
+function unlock(){
+  setTimeout(() => {
+    window.location.href = "photo.html";
+  }, 800);
+}
+
+/* ===== RENDER LOOP ===== */
+function animate(){
+  requestAnimationFrame(animate);
+  renderer.render(scene, camera);
+}
+animate();
+
+/* ===== RESIZE ===== */
+window.addEventListener("resize", () => {
+  camera.aspect = window.innerWidth/window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+});
+</script>
+</body>
+</html>
