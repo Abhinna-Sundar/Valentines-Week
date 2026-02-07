@@ -253,11 +253,8 @@
       <div class="grid2">
         <div class="panel">
           <h2>(ii) Green-majority flags</h2>
-          <p class="small">Type <b>3 countries</b> whose flags are mostly green. Separate by commas.</p>
-          <div class="small">Possible answers: Bangladesh, Saudi Arabia, Pakistan, Nigeria, Brazil, Mauritania, Zambia</div>
-          <div style="margin-top:10px;">
-            <input id="greenInput" type="text" placeholder="Type 3 countries, separated by commas"/>
-          </div>
+          <p class="small">Write <b>3 countries</b> whose flags are mostly green. Separate by commas.</p>
+          <input id="greenInput" type="text" placeholder="Type 3 countries, separated by commas"/>
           <div class="row" style="margin-top:10px;">
             <button class="btn" id="greenCheck">Check</button>
           </div>
@@ -265,7 +262,7 @@
         </div>
         <div class="panel">
           <h2>Rule</h2>
-          <p class="small">Pick exactly 3 from the list.</p>
+          <p class="small">Only 3 are correct.</p>
         </div>
       </div>
     </div>
@@ -330,7 +327,7 @@
         </div>
         <div class="panel">
           <h2>Rule</h2>
-          <p class="small">We accept: Japan, Switzerland, Georgia, Honduras, Bangladesh (any 3).</p>
+          <p class="small">Only 3 are needed.</p>
         </div>
       </div>
     </div>
@@ -426,12 +423,8 @@
 
 <script>
 (() => {
-  const KEY = "val_week_day2_countryquest_v4";
-
-  // She receives digits in this order (one per game):
-  const AWARD_DIGITS = ["1","5","2","1","0","2"];  // 152102
-
-  // But the magic number she must enter is:
+  const KEY = "val_week_day2_countryquest_v5";
+  const AWARD_DIGITS = ["1","5","2","1","0","2"]; // 152102
   const PASSCODE = "121025";
   const WORD_OF_DAY = "YOU";
 
@@ -449,7 +442,6 @@
     el.textContent = text;
     el.style.display = type ? "block" : "none";
   }
-
   function setSection(id){
     document.querySelectorAll(".section").forEach(s => s.classList.remove("active"));
     $(id).classList.add("active");
@@ -513,13 +505,12 @@
     else setSection("final");
   }
 
-  // (i) Unscramble (custom)
+  // (i) Unscramble
   const SCRAMBLE = [
     { scrambled: "TEGUALAMA", answer: "guatemala" },
     { scrambled: "BBAMEWZI",  answer: "zimbabwe" },
     { scrambled: "POGASIREN", answer: "singapore" }
   ];
-
   function renderScramble(){
     const wrap = $("scrambleArea");
     wrap.innerHTML = "";
@@ -547,17 +538,14 @@
         state.solved.s1 = true; saveState();
         awardDigit();
       }
-    } else {
-      showToast("scrToast", "bad", `You got ${ok}/3. Try again 🙂`);
-    }
+    } else showToast("scrToast", "bad", `You got ${ok}/3. Try again 🙂`);
   };
 
-  // (ii) Green-majority flags — free text, but must pick 3 from list
+  // (ii) Green-majority flags — no list shown; only hidden accepted set
   const GREEN_ALLOWED = new Set([
     "bangladesh","saudi arabia","pakistan","nigeria","brazil","mauritania","zambia"
   ]);
   const GREEN_CORRECT = new Set([
-    // pick 3 correct from the allowed list that are clearly green-dominant
     "saudi arabia","pakistan","nigeria"
   ]);
 
@@ -566,19 +554,18 @@
     const parts = unique(raw.split(",").map(s => norm(s)).filter(Boolean));
 
     if (parts.length !== 3){
-      showToast("greenToast","bad","Please type exactly 3 countries (comma-separated).");
+      showToast("greenToast","bad","Please write exactly 3 countries (comma-separated).");
       return;
     }
 
-    // must be from allowed list
+    // must be from allowed list (HIDDEN)
     for (const p of parts){
       if (!GREEN_ALLOWED.has(p)){
-        showToast("greenToast","bad","Please choose only from the provided list.");
+        showToast("greenToast","bad","Not accepted. Try different ones 🙂");
         return;
       }
     }
 
-    // check correctness
     let ok = 0;
     const picked = new Set(parts);
     picked.forEach(p => { if (GREEN_CORRECT.has(p)) ok++; });
@@ -589,12 +576,10 @@
         state.solved.s2 = true; saveState();
         awardDigit();
       }
-    } else {
-      showToast("greenToast","bad","Not quite 🙂 Try again.");
-    }
+    } else showToast("greenToast","bad","Not quite 🙂 Try again.");
   };
 
-  // (iii) 7 of top 10 most populated (no examples in box)
+  // (iii) Population giants
   const TOP10 = new Set([
     "india","china","united states","usa","us","indonesia","pakistan","nigeria","brazil","bangladesh","russia","ethiopia"
   ]);
@@ -609,7 +594,6 @@
       showToast("popToast","bad","Write at least 7 countries (comma-separated).");
       return;
     }
-
     const mapped = parts.map(p => {
       if (p === "us" || p === "u s" || p === "u s a" || p === "america") return "united states";
       return p;
@@ -629,17 +613,14 @@
         state.solved.s3 = true; saveState();
         awardDigit();
       }
-    } else {
-      showToast("popToast","bad",`You got ${hits.size}/10. Need at least 7. Try again 🙂`);
-    }
+    } else showToast("popToast","bad",`You got ${hits.size}/10. Need at least 7. Try again 🙂`);
   };
 
-  // (iv) Flag -> type name (Burma, Honduras, Zimbabwe)
-  // Burma flag code: mm (Myanmar)
+  // (iv) Flags -> type name
   const FLAG_ROUNDS = [
-    { name:"Myanmar", aliases:["myanmar","burma"], iso:"mm" },
-    { name:"Honduras", aliases:["honduras"], iso:"hn" },
-    { name:"Zimbabwe", aliases:["zimbabwe"], iso:"zw" }
+    { aliases:["myanmar","burma"], iso:"mm" },
+    { aliases:["honduras"], iso:"hn" },
+    { aliases:["zimbabwe"], iso:"zw" }
   ];
   let flagIdx = 0;
 
@@ -656,7 +637,6 @@
     const got = norm($("flagInput").value);
     const r = FLAG_ROUNDS[flagIdx];
     const ok = r.aliases.includes(got);
-
     if (ok){
       showToast("flagToast","ok","Correct ✅");
       flagIdx++;
@@ -665,26 +645,20 @@
           state.solved.s4 = true; saveState();
           awardDigit();
         }
-      } else {
-        setFlagRound();
-      }
-    } else {
-      showToast("flagToast","bad","Not quite 🙂 Try again.");
-    }
+      } else setFlagRound();
+    } else showToast("flagToast","bad","Not quite 🙂 Try again.");
   };
 
-  // (v) Symmetrical flags (accepted set you requested)
+  // (v) Symmetrical flags (accepted set you chose; not shown)
   const SYM = new Set(["japan","switzerland","georgia","honduras","bangladesh"]);
 
   $("symCheck").onclick = () => {
     const raw = $("symInput").value || "";
     const parts = unique(raw.split(",").map(s => norm(s)).filter(Boolean));
-
     if (parts.length < 3){
       showToast("symToast","bad","Please type 3 countries (comma-separated).");
       return;
     }
-
     const hits = new Set();
     parts.forEach(m => { if (SYM.has(m)) hits.add(m); });
 
@@ -694,17 +668,11 @@
         state.solved.s5 = true; saveState();
         awardDigit();
       }
-    } else {
-      showToast("symToast","bad","Not quite 🙂 Try again.");
-    }
+    } else showToast("symToast","bad","Not quite 🙂 Try again.");
   };
 
-  // (vi) Map (country by borders) — make red VERY visible
-  const MAP_ROUNDS = [
-    { name:"Italy" },
-    { name:"India" },
-    { name:"Brazil" }
-  ];
+  // (vi) Map highlight — VERY visible
+  const MAP_ROUNDS = [{ name:"Italy" },{ name:"India" },{ name:"Brazil" }];
   let mapIdx = 0;
 
   $("mapCheck").onclick = () => {
@@ -718,12 +686,8 @@
           state.solved.s6 = true; saveState();
           awardDigit();
         }
-      } else {
-        drawMapRound();
-      }
-    } else {
-      showToast("mapToast","bad","Not quite 🙂 Try again.");
-    }
+      } else drawMapRound();
+    } else showToast("mapToast","bad","Not quite 🙂 Try again.");
   };
 
   async function drawMapRound(){
@@ -746,11 +710,10 @@
 
     const targetName = MAP_ROUNDS[mapIdx].name;
 
-    // Darker background to make highlight pop
     svg.append("rect")
       .attr("x", 0).attr("y", 0)
       .attr("width", width).attr("height", height)
-      .attr("fill", "rgba(0,0,0,.10)");
+      .attr("fill", "rgba(0,0,0,.12)");
 
     svg.append("g")
       .selectAll("path")
@@ -759,35 +722,25 @@
       .attr("d", path)
       .attr("fill", d => {
         const nm = idToName.get(d.id) || "";
-        return (norm(nm) === norm(targetName)) ? "#ff0000" : "rgba(255,255,255,.04)";
+        return (norm(nm) === norm(targetName)) ? "#ff0000" : "rgba(255,255,255,.035)";
       })
       .attr("stroke", d => {
         const nm = idToName.get(d.id) || "";
-        return (norm(nm) === norm(targetName)) ? "rgba(255,255,255,.95)" : "rgba(255,255,255,.10)";
+        return (norm(nm) === norm(targetName)) ? "rgba(255,255,255,.98)" : "rgba(255,255,255,.10)";
       })
       .attr("stroke-width", d => {
         const nm = idToName.get(d.id) || "";
-        return (norm(nm) === norm(targetName)) ? 2.4 : 0.6;
+        return (norm(nm) === norm(targetName)) ? 2.6 : 0.6;
       });
 
-    // Title
     svg.append("text")
       .attr("x", 20).attr("y", 34)
-      .attr("fill", "rgba(255,255,255,.88)")
+      .attr("fill", "rgba(255,255,255,.90)")
       .attr("font-size", 18)
       .attr("font-weight", 900)
       .text(`Round ${mapIdx+1}/3`);
-
-    // Legend bubble
-    svg.append("text")
-      .attr("x", 20).attr("y", 58)
-      .attr("fill", "rgba(255,255,255,.70)")
-      .attr("font-size", 13)
-      .attr("font-weight", 700)
-      .text("Find the BRIGHT RED country.");
   }
 
-  // Ensure map draws on entry to section 6
   const originalRoute = route;
   route = function(){
     originalRoute();
@@ -799,7 +752,6 @@
 
   // Final lock
   let entered = "";
-
   $("openLock").onclick = () => {
     $("lockOverlay").classList.add("show");
     buildKeypad();
@@ -813,7 +765,6 @@
       $("p"+i).textContent = entered[i] ? "•" : "";
     }
   }
-
   function buildKeypad(){
     const kp = $("keypad");
     kp.innerHTML = "";
@@ -828,10 +779,7 @@
           setPin();
           return;
         }
-        if (k === "OK"){
-          tryUnlock();
-          return;
-        }
+        if (k === "OK"){ tryUnlock(); return; }
         if (entered.length >= 6) return;
         entered += k;
         setPin();
@@ -839,7 +787,6 @@
       kp.appendChild(div);
     });
   }
-
   $("clearBtn").onclick = () => { entered=""; setPin(); };
 
   function tryUnlock(){
@@ -866,18 +813,10 @@
       setPin();
     }
   }
-
   $("unlockBtn").onclick = tryUnlock;
 
-  $("resetBtn").onclick = () => {
-    localStorage.removeItem(KEY);
-    location.reload();
-  };
-
-  $("rememberBtn").onclick = () => {
-    localStorage.removeItem(KEY);
-    location.reload();
-  };
+  $("resetBtn").onclick = () => { localStorage.removeItem(KEY); location.reload(); };
+  $("rememberBtn").onclick = () => { localStorage.removeItem(KEY); location.reload(); };
 
 })();
 </script>
