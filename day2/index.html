@@ -51,9 +51,7 @@
       color:var(--muted);
       font-size:14px;
     }
-    .digits{
-      display:flex; gap:8px; align-items:center;
-    }
+    .digits{ display:flex; gap:8px; align-items:center; }
     .digitBox{
       width:36px; height:42px;
       border-radius:12px;
@@ -66,7 +64,6 @@
     .digitBox.on{ color:rgba(255,255,255,.95); }
     .grid2{ display:grid; grid-template-columns: 1fr 1fr; gap:14px; }
     @media(max-width:840px){ .grid2{ grid-template-columns:1fr; } }
-
     .panel{
       padding:14px;
       border-radius:18px;
@@ -104,7 +101,6 @@
       font-size:16px;
     }
     .small{ font-size:13px; color:var(--muted); }
-
     .toast{
       margin-top:10px;
       padding:10px 12px;
@@ -115,11 +111,9 @@
     }
     .toast.ok{ display:block; border-color: rgba(47,255,122,.3); background:rgba(47,255,122,.10); color:#c9ffe4; }
     .toast.bad{ display:block; border-color: rgba(255,92,92,.3); background:rgba(255,92,92,.10); color:#ffd0d0; }
-
     .section{ display:none; }
     .section.active{ display:block; }
 
-    /* Flag cards */
     .flagGrid{
       display:grid; grid-template-columns: repeat(3, 1fr);
       gap:10px;
@@ -138,7 +132,6 @@
     .flagCard img{ width:100%; height:120px; object-fit:cover; display:block; }
     .flagCard .cap{ padding:10px 12px; color:var(--muted); font-size:14px; }
 
-    /* Map */
     .mapWrap{
       border-radius:18px;
       border:1px solid rgba(255,255,255,.14);
@@ -147,7 +140,6 @@
     }
     svg{ width:100%; height:auto; display:block; }
 
-    /* Overlays */
     .overlay{
       position:fixed; inset:0;
       display:none; place-items:center;
@@ -221,6 +213,7 @@
     .wordBig{ font-size:34px; font-weight:1000; letter-spacing:.08em; margin-top:6px; }
   </style>
 </head>
+
 <body>
 <div class="wrap">
   <div class="card">
@@ -245,10 +238,9 @@
       <div class="grid2">
         <div class="panel">
           <h2>(i) Unscramble 3 countries</h2>
-          <p class="small">Type the correct country name (case doesn’t matter). Use hints if you want.</p>
+          <p class="small">Type the correct country name (case doesn’t matter).</p>
           <div id="scrambleArea"></div>
           <div class="row" style="margin-top:10px;">
-            <button class="btn secondary" id="scrHint">Get a hint</button>
             <button class="btn" id="scrCheck">Check answers</button>
           </div>
           <div class="toast" id="scrToast"></div>
@@ -256,7 +248,6 @@
         <div class="panel">
           <h2>Rules</h2>
           <p class="small">You need all 3 correct to pass.</p>
-          <p class="small">Tip: spelling matters — but caps don’t.</p>
         </div>
       </div>
     </div>
@@ -275,8 +266,8 @@
           <div class="toast" id="greenToast"></div>
         </div>
         <div class="panel">
-          <h2>Hint</h2>
-          <p class="small">Think “visually dominated by green”, not “has a tiny green stripe”.</p>
+          <h2>Note</h2>
+          <p class="small">Pick exactly 3.</p>
         </div>
       </div>
     </div>
@@ -289,15 +280,13 @@
           <p class="small">Name <b>7 of the top 10 most populated countries</b>. Separate by commas.</p>
           <input id="popInput" type="text" placeholder="e.g., India, China, United States, ..."/>
           <div class="row" style="margin-top:10px;">
-            <button class="btn secondary" id="popHint">Show a hint</button>
             <button class="btn" id="popCheck">Check</button>
           </div>
           <div class="toast" id="popToast"></div>
         </div>
         <div class="panel">
-          <h2>Note</h2>
+          <h2>Tip</h2>
           <p class="small">We accept any 7. Minor variants accepted (USA / United States, etc.).</p>
-          <p class="small">Population list based on a current ranking source. </p>
         </div>
       </div>
     </div>
@@ -323,17 +312,16 @@
       <div class="grid2">
         <div class="panel">
           <h2>(v) Symmetrical flags</h2>
-          <p class="small">Name <b>3 countries</b> with clearly symmetrical flags (design symmetry). Separate by commas.</p>
+          <p class="small">Name <b>3 countries</b> with clearly symmetrical flags. Separate by commas.</p>
           <input id="symInput" type="text" placeholder="e.g., Japan, Switzerland, ..."/>
           <div class="row" style="margin-top:10px;">
-            <button class="btn secondary" id="symHint">Hint</button>
             <button class="btn" id="symCheck">Check</button>
           </div>
           <div class="toast" id="symToast"></div>
         </div>
         <div class="panel">
-          <h2>Accepted answers</h2>
-          <p class="small">We accept several. You just need 3 from our accepted set.</p>
+          <h2>Note</h2>
+          <p class="small">You just need 3 accepted answers.</p>
         </div>
       </div>
     </div>
@@ -351,14 +339,13 @@
             <input id="mapGuess" type="text" placeholder="Your guess..."/>
           </div>
           <div class="row" style="margin-top:10px;">
-            <button class="btn secondary" id="mapHint">Hint</button>
             <button class="btn" id="mapCheck">Check</button>
           </div>
           <div class="toast" id="mapToast"></div>
         </div>
         <div class="panel">
-          <h2>How this works</h2>
-          <p class="small">This uses a simplified world map in the browser. If it doesn’t load, refresh once.</p>
+          <h2>Note</h2>
+          <p class="small">If the map doesn’t load, refresh once.</p>
         </div>
       </div>
     </div>
@@ -409,8 +396,12 @@
 
     <div id="photoWrap">
       <img src="us.jpg" alt="Us"
-        onerror="this.outerHTML='<div style=&quot;padding:12px;color:#ffd0d0&quot;><b>Missing us.jpg</b><br/>Put a photo named <b>us.jpg</b> inside <b>day2/</b>.</div>';">
+           onerror="this.outerHTML='<div style=&quot;padding:12px;color:#ffd0d0&quot;><b>Missing us.jpg</b><br/>Put a photo named <b>us.jpg</b> inside <b>day2/</b>.</div>';">
     </div>
+
+    <button class="btn secondary" id="resetBtn" style="margin-top:10px; display:none;">
+      Reset game ↻
+    </button>
 
     <div class="wordCard" id="wordCard" style="display:none;">
       <div style="color:var(--muted); font-size:13px;">Word of the Day</div>
@@ -426,7 +417,7 @@
 
 <script>
 (() => {
-  const KEY = "val_week_day2_countryquest_v2";
+  const KEY = "val_week_day2_countryquest_v3";
 
   // She receives digits in this order (one per game):
   const AWARD_DIGITS = ["1","5","2","1","0","2"];  // 152102
@@ -434,10 +425,8 @@
   // But the magic number she must enter is:
   const PASSCODE = "121025";
 
-  // Word of the day:
-  const WORD_OF_DAY = "FINNJA";
+  const WORD_OF_DAY = "YOU";
 
-  // ========= Utilities =========
   const $ = (id) => document.getElementById(id);
   const norm = (s) => (s||"")
     .toLowerCase()
@@ -458,7 +447,6 @@
     $(id).classList.add("active");
   }
 
-  // ========= State =========
   const state = loadState();
   updateDigitBoxes();
   route();
@@ -517,13 +505,12 @@
     else setSection("final");
   }
 
-  // ========= (i) Unscramble 3 countries =========
+  // (i) Unscramble
   const SCRAMBLE = [
-    { scrambled: "RNEAMYG", answer: "germany", hint: "A country famous for Heidelberg." },
-    { scrambled: "IYTL A",  answer: "italy",   hint: "A boot-shaped country in Europe." },
-    { scrambled: "GDNALBANH", answer: "bangladesh", hint: "A densely populated South Asian country." }
+    { scrambled: "RNEAMYG", answer: "germany" },
+    { scrambled: "IYTL A",  answer: "italy" },
+    { scrambled: "GDNALBANH", answer: "bangladesh" }
   ];
-  let scrHintsUsed = 0;
 
   function renderScramble(){
     const wrap = $("scrambleArea");
@@ -534,18 +521,11 @@
       div.innerHTML = `
         <div class="small"><b>Scramble ${idx+1}:</b> ${q.scrambled}</div>
         <input type="text" id="scrIn${idx}" placeholder="Your answer..." />
-        <div class="small" id="scrH${idx}" style="display:none; margin-top:6px;">Hint: ${q.hint}</div>
       `;
       wrap.appendChild(div);
     });
   }
   renderScramble();
-
-  $("scrHint").onclick = () => {
-    if (scrHintsUsed >= 3) return;
-    $("scrH"+scrHintsUsed).style.display = "block";
-    scrHintsUsed++;
-  };
 
   $("scrCheck").onclick = () => {
     let ok = 0;
@@ -564,7 +544,7 @@
     }
   };
 
-  // ========= (ii) Green-majority flags =========
+  // (ii) Green-majority flags
   const GREEN_SET = new Set(["nigeria","pakistan","bangladesh"]);
   const GREEN_CHOICES = ["Nigeria","Pakistan","Bangladesh","France","Japan","Brazil"];
   const selectedGreen = new Set();
@@ -614,22 +594,17 @@
         awardDigit();
       }
     } else {
-      showToast("greenToast","bad","Not quite — you picked at least one that isn’t green-majority.");
+      showToast("greenToast","bad","Not quite — at least one choice is not green-majority.");
     }
   };
 
-  // ========= (iii) 7 of top 10 most populated =========
-  // Accept canonical top-10 set (with variants). Source list commonly matches Worldometer-style rankings.
+  // (iii) 7 of top 10 most populated (accepted set)
   const TOP10 = new Set([
     "india","china","united states","usa","us","indonesia","pakistan","nigeria","brazil","bangladesh","russia","ethiopia"
   ]);
   const TOP10_CANON = new Set([
     "india","china","united states","indonesia","pakistan","nigeria","brazil","bangladesh","russia","ethiopia"
   ]);
-
-  $("popHint").onclick = () => {
-    showToast("popToast","ok","Hint: Think India, China, USA… then big ones like Indonesia, Brazil, and a fast-growing African country.");
-  };
 
   $("popCheck").onclick = () => {
     const raw = $("popInput").value || "";
@@ -658,7 +633,7 @@
     }
   };
 
-  // ========= (iv) Guess 3 flags =========
+  // (iv) Guess 3 flags
   const FLAG_ROUNDS = [
     { target:"Japan",   options:["Japan","Poland","Indonesia"] },
     { target:"Germany", options:["Belgium","Germany","Netherlands"] },
@@ -717,14 +692,11 @@
   }
   renderFlagRound();
 
-  // ========= (v) Symmetrical flags =========
+  // (v) Symmetrical flags
   const SYM = new Set([
-    "japan","switzerland","georgia"
+    "japan","switzerland","vatican city","iceland","norway","finland","sweden",
+    "greece","israel","austria","peru","canada","bangladesh"
   ]);
-
-  $("symHint").onclick = () => {
-    showToast("symToast","ok","Hint: Japan and Switzerland are easy wins.");
-  };
 
   $("symCheck").onclick = () => {
     const raw = $("symInput").value || "";
@@ -745,15 +717,13 @@
     }
   };
 
-  // ========= (vi) Country by borders (map) =========
+  // (vi) Map (country by borders)
   const MAP_ROUNDS = [
-    { name:"Italy", hint:"Boot-shaped peninsula in Europe." },
-    { name:"India", hint:"Big South Asian country with a tapering peninsula." },
-    { name:"Brazil", hint:"Largest country in South America." }
+    { name:"Italy" },
+    { name:"India" },
+    { name:"Brazil" }
   ];
   let mapIdx = 0;
-
-  $("mapHint").onclick = () => showToast("mapToast","ok","Hint: " + MAP_ROUNDS[mapIdx].hint);
 
   $("mapCheck").onclick = () => {
     const got = norm($("mapGuess").value);
@@ -799,9 +769,18 @@
       .data(countries.features)
       .join("path")
       .attr("d", path)
-      .attr("fill", d => (idToName.get(d.id) === targetName) ? "rgba(255,77,125,.95)" : "rgba(255,255,255,.07)")
-      .attr("stroke", "rgba(255,255,255,.14)")
-      .attr("stroke-width", 0.6);
+      .attr("fill", d => {
+        const nm = idToName.get(d.id) || "";
+        return (norm(nm) === norm(targetName)) ? "#ff2d55" : "rgba(255,255,255,.06)";
+      })
+      .attr("stroke", d => {
+        const nm = idToName.get(d.id) || "";
+        return (norm(nm) === norm(targetName)) ? "rgba(255,255,255,.55)" : "rgba(255,255,255,.12)";
+      })
+      .attr("stroke-width", d => {
+        const nm = idToName.get(d.id) || "";
+        return (norm(nm) === norm(targetName)) ? 1.2 : 0.6;
+      });
 
     svg.append("text")
       .attr("x", 20).attr("y", 34)
@@ -811,17 +790,19 @@
       .text(`Round ${mapIdx+1}/3`);
   }
 
-  // Start map when reaching section 6
-  const origRoute = route;
+  // Ensure map draws on entry to section 6
+  const originalRoute = route;
   route = function(){
-    origRoute();
+    originalRoute();
     if (state.stage === 6){
       drawMapRound().catch(() => showToast("mapToast","bad","Map failed to load. Refresh once."));
     }
   };
   route();
 
-  // ========= Final lock =========
+  // Final lock
+  let entered = "";
+
   $("openLock").onclick = () => {
     $("lockOverlay").classList.add("show");
     buildKeypad();
@@ -830,7 +811,6 @@
     $("lockText").textContent = "Enter the 6-digit magic number.";
   };
 
-  let entered = "";
   function setPin(){
     for (let i=0;i<6;i++){
       $("p"+i).textContent = entered[i] ? "•" : "";
@@ -875,9 +855,10 @@
     if (entered === PASSCODE){
       $("lockText").textContent = "Unlocked 😌";
       $("photoWrap").classList.add("show");
+      $("resetBtn").style.display = "block";
       $("wordCard").style.display = "block";
       $("word").textContent = WORD_OF_DAY;
-      // disable keypad after success
+
       $("keypad").querySelectorAll(".key").forEach(k => k.style.pointerEvents="none");
       $("unlockBtn").disabled = true; $("unlockBtn").style.opacity = "0.6";
       $("clearBtn").disabled = true; $("clearBtn").style.opacity = "0.6";
@@ -891,11 +872,14 @@
 
   $("unlockBtn").onclick = tryUnlock;
 
+  $("resetBtn").onclick = () => {
+    localStorage.removeItem(KEY);
+    location.reload();
+  };
+
   $("rememberBtn").onclick = () => {
-    setTimeout(() => {
-      localStorage.removeItem(KEY);
-      location.reload();
-    }, 700);
+    localStorage.removeItem(KEY);
+    location.reload();
   };
 
 })();
